@@ -19,11 +19,11 @@
                                 <h5 class="wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"> تسجيل الدخول
                                 </h5>
                             </div>
-                                <form method="POST" class="form-class" action="{{ route('customer.login') }}">
+                                <form method="POST" class="form-class" action="{{ route('customer.login.post') }}">
                                     @csrf
                                     <div class="col-12" >
-                                        <label for="phone"> اسم المستخدم</label>
-                                        <input id="phone" name="phone" type="text" value="{{ old('phone') }}" placeholder="" autofocus>
+                                        <label for="login">البريد الإلكتروني أو رقم الجوال</label>
+                                        <input id="login" name="login" type="text" value="{{ old('login') }}" placeholder="" autofocus>
                                     </div>
                                         <div class="col-12" >
                                         <label for="password">  كلمة المرور</label>

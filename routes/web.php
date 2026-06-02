@@ -77,6 +77,8 @@ Route::get('/check',  $customerController . "@check")->name('tap.check');
 Route::post('/logout',  "CustomerController@logout")->name('customer.logout');
 Route::post('/login',  "CustomerController@loginPost")->name('customer.login.post')->middleware('throttle:10,1');
 Route::post('/login/code',  "CustomerController@loginCode")->name('customer.login.access_code')->middleware('throttle:10,1');
+Route::get('/register',  "CustomerController@login")->name('customer.register');
+Route::post('/register',  "CustomerController@registerPost")->name('customer.register.post')->middleware('throttle:5,1');
 Route::get('/page/{id}/', $HomePage . "@post")->name('pages');
 Route::get('/contacts', $HomePage . "@contacts")->name('contact');
 Route::post('/contacts', $HomePage . "@contacts_post")->middleware('throttle:5,1');

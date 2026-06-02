@@ -198,19 +198,18 @@ class CustomerController extends Controller
     {
         if ($request->filled('password')) {
             $this->validate($request, [
-                'phone' => 'required|string',
+                'login' => 'required_without:phone|string|max:255',
+                'phone' => 'required_without:login|string|max:255',
                 'password' => 'required|string',
             ]);
 
-            $customer = Customer::where('phone', $request->phone)
-                ->orWhere('email', $request->phone)
-                ->first();
+            $customer = $this->findCustomerForLogin($request->input('login', $request->phone));
 
-            if (!$customer || !$customer->password || !Hash::check($request->password, $customer->password)) {
+            if (!$customer || !$customer->activate || !$customer->password || !Hash::check($request->password, $customer->password)) {
                 return redirect()->back()->with('info', 'بيانات الدخول غير صحيحة');
             }
 
-            Auth::guard('customer')->loginUsingId($customer->id);
+            Auth::guard('customer')->login($customer, $request->boolean('remember'));
             General::addCustomerCart();
 
             if (count(Auth::guard('customer')->user()->carts) > 0) {
@@ -221,6 +220,14 @@ class CustomerController extends Controller
         }
 
         if (request()->url() == route('customer.login')) {
+            $phone = $this->normalizeCustomerPhone($request->phone);
+            if (!$phone) {
+                return redirect()->back()
+                    ->withErrors(['phone' => 'رقم الجوال يجب أن يكون بصيغة سعودية صحيحة مثل 5XXXXXXXX'])
+                    ->withInput();
+            }
+
+            $request->merge(['phone' => $phone]);
             $this->validate($request, [
                 'phone'     =>   [
                     'required',
@@ -243,7 +250,7 @@ class CustomerController extends Controller
             // Store OTP and phone number in the session
             Session::put('code_send', $otp);
             Session::put('id_login', $customer->id);
-            $title = "رمز الدخول للوحة انا متدرب : ";
+            $title = "رمز الدخول لمتجر تيانيل : ";
             $body = $otp;
             $get_return = General::sendSMS($title, $body,  'customer Login', $customer->phone);
             $type_send_text = "تم إرسال الرمز إلى جوالك ";
@@ -251,6 +258,81 @@ class CustomerController extends Controller
             // Redirect to the OTP verification form
             return redirect()->back()->with('code_send', 'تم إرسال الكود بنجاح.');
         }
+    }
+
+    public function registerPost(Request $request)
+    {
+        $phone = $this->normalizeCustomerPhone($request->phone);
+        if (!$phone) {
+            return redirect()->back()
+                ->withErrors(['phone' => 'رقم الجوال يجب أن يكون بصيغة سعودية صحيحة مثل 5XXXXXXXX'])
+                ->withInput();
+        }
+
+        $request->merge([
+            'phone' => $phone,
+            'email' => strtolower(trim((string) $request->email)),
+        ]);
+
+        $this->validate($request, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:254|unique:customers,email',
+            'phone' => 'required|string|regex:/^5[0-9]{8}$/|unique:customers,phone',
+            'password' => 'required|string|min:8|confirmed',
+            'terms' => 'accepted',
+        ]);
+
+        $customer = new Customer();
+        $customer->forceFill([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'activate' => 1,
+            'newsletter' => $request->boolean('newsletter'),
+        ])->save();
+
+        event(new Registered($customer));
+        Auth::guard('customer')->login($customer);
+        General::addCustomerCart();
+
+        if (count(Auth::guard('customer')->user()->carts) > 0) {
+            return redirect()->intended(route('customer.cart'))->with('message', 'تم إنشاء حسابك بنجاح');
+        }
+
+        return redirect()->intended(route('customer.dashboard'))->with('message', 'تم إنشاء حسابك بنجاح');
+    }
+
+    private function findCustomerForLogin(?string $identifier): ?Customer
+    {
+        $identifier = trim((string) $identifier);
+        $phone = $this->normalizeCustomerPhone($identifier);
+
+        return Customer::where(function ($query) use ($identifier, $phone) {
+            $query->where('email', strtolower($identifier))
+                ->orWhere('identity', $identifier);
+
+            if ($phone) {
+                $query->orWhere('phone', $phone);
+            } else {
+                $query->orWhere('phone', $identifier);
+            }
+        })->first();
+    }
+
+    private function normalizeCustomerPhone(?string $phone): ?string
+    {
+        $phone = preg_replace('/\D+/', '', (string) $phone);
+
+        if (str_starts_with($phone, '00966')) {
+            $phone = substr($phone, 5);
+        } elseif (str_starts_with($phone, '966')) {
+            $phone = substr($phone, 3);
+        } elseif (str_starts_with($phone, '0')) {
+            $phone = substr($phone, 1);
+        }
+
+        return preg_match('/^5[0-9]{8}$/', $phone) ? $phone : null;
     }
     /**
      * Show the form for creating a new resource.
