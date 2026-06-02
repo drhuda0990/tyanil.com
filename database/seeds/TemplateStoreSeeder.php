@@ -43,13 +43,16 @@ class TemplateStoreSeeder extends Seeder
 
         $adminPermissions = DB::table('permissions')->pluck('id')->map(fn ($id) => (string) $id)->values()->all();
 
+        $adminEmail = env('ADMIN_EMAIL', 'info@tyanil.com');
+        $adminPassword = env('ADMIN_PASSWORD', 'Tyanil@ChangeMe2026!');
+
         DB::table('users')->updateOrInsert(
-            ['email' => 'admin@example.test'],
+            ['email' => $adminEmail],
             [
                 'name' => 'Tyaniel Admin',
                 'phone' => '500000000',
                 'permissions' => json_encode($adminPermissions),
-                'password' => Hash::make('password'),
+                'password' => Hash::make($adminPassword),
                 'activate' => 1,
                 'updated_at' => $now,
                 'created_at' => $now,
@@ -87,15 +90,15 @@ class TemplateStoreSeeder extends Seeder
                 'summary' => 'تيانيل متجر نسائي راق يجمع قطع الكروشيه، الأزياء، الشنط، الأحذية، الأكسسوارات، ومنتجات الجمال في تجربة شراء ناعمة وفاخرة.',
                 'vision' => 'أن تصبح تيانيل وجهة نسائية موثوقة لقطع مختارة تجمع الرقة، الجودة، وسهولة التسوق.',
                 'message' => 'نقدم منتجات نسائية مصممة لتكميل الإطلالة بثقة، من قطعة الكروشيه اليدوية إلى لمسة الجمال الأخيرة.',
-                'commercial_register' => '0000000000',
-                'email_1' => 'hello@tyaniel.com',
-                'email_2' => 'care@tyaniel.com',
+                'commercial_register' => '7033071270',
+                'email_1' => 'info@tyanil.com',
+                'email_2' => 'info@tyanil.com',
                 'phone' => '0500000000',
                 'mobile' => '0500000000',
                 'whatsapp' => '500000000',
                 'pobox' => '00000',
                 'address' => 'الرياض، المملكة العربية السعودية',
-                'website' => 'http://127.0.0.1:8000',
+                'website' => 'https://www.tyanil.com',
                 'sender_name' => 'Tyaniel',
                 'payment_mode' => 'test',
                 'manualPaymentActivate' => 1,
