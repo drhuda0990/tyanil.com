@@ -38,15 +38,17 @@ class HomeController extends Controller
         $startDate = Carbon::createFromDate(2024, 12, 5, null);
         $endDate = Carbon::now();
         $sum = 10000;
-        try {
-            $Period = Period::create($startDate, $endDate);
-            // $analytics = Analytics::get($Period, $metrics, $dimensions);
-            $analyticsData = Analytics::fetchVisitorsAndPageViews($Period);
-            foreach ($analyticsData as $key => $value) {
-                $sum += $value['screenPageViews'];
+        if (config('analytics.property_id') && file_exists(config('analytics.service_account_credentials_json'))) {
+            try {
+                $Period = Period::create($startDate, $endDate);
+                // $analytics = Analytics::get($Period, $metrics, $dimensions);
+                $analyticsData = Analytics::fetchVisitorsAndPageViews($Period);
+                foreach ($analyticsData as $key => $value) {
+                    $sum += $value['screenPageViews'];
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
             }
-        } catch (\Throwable $exception) {
-            report($exception);
         }
         // \Log::info($analytics);
 
