@@ -1,0 +1,369 @@
+@font-face {
+    font-family: 'AlmaraiR';
+    src: url("../fonts/Almarai-Regular.ttf");
+}
+
+@font-face {
+    font-family: 'Monda';
+    src: url("fonts/En/Monda-Regular.ttf");
+}
+
+body,
+header,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'AlmaraiR', sans-serif !important;
+    direction: rtl;
+    line-height: 1.5;
+}
+
+.En {
+    direction: ltr !important;
+    font-family: 'Monda', 'AlmaraiR', sans-serif !important;
+}
+
+
+/*--------*/
+
+body {
+    position: relative;
+    /*
+  width: 21cm;
+  height: 29.7cm;
+  */
+    margin: 0 auto;
+    color: #555555;
+    background: #EEE;
+    font-size: 14px;
+}
+
+section {
+    width: 21cm;
+    height: 29.7cm;
+    background-color: #FFF;
+    padding: 2pc;
+    margin: 1pc auto;
+    overflow: hidden;
+    display: block;
+    position: relative;
+    border: 3px solid #ddd;
+}
+
+.clearfix:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+a {
+    color: #0087C3;
+    text-decoration: none;
+}
+
+header {
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #AAAAAA;
+}
+
+#logo {
+    float: left;
+    margin-top: 8px;
+}
+
+#logo img {
+    /*height: 70px;*/
+    height: 100px;
+    position: absolute;
+    left: 3%;
+    top: 2%;
+}
+
+#company {
+    float: right;
+    text-align: right;
+}
+
+#company>small {
+    display: block;
+    padding-bottom: 5px;
+}
+
+#details {
+    margin-bottom: 50px;
+}
+
+#client {
+    padding-left: 2pc;
+    /*border-right: 6px solid #0087C3;*/
+    float: left;
+}
+
+#client .to {
+    color: #777777;
+}
+
+h2.name {
+    font-size: 1.8em;
+    font-weight: normal;
+    margin: 0 0 5px;
+}
+
+#invoice {
+    padding-right: 2pc;
+    float: right;
+    text-align: right;
+}
+
+#invoice h1 {
+    color: #0087C3;
+    font-size: 2.4em;
+    line-height: 1em;
+    font-weight: normal;
+    margin: 0 0 10px 0;
+}
+
+#invoice .date {
+    font-size: 1.1em;
+    color: #777777;
+}
+
+#invoice b,
+#client b {
+    display: block;
+    margin: 10px 0 0;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
+#invoice p,
+#client p {
+    margin-top: 0;
+}
+
+.title_invoice {
+    text-align: center;
+    background-color: #fbfbfb;
+    padding: 1pc 0;
+    font-size: 2.5em;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin-bottom: 20px;
+}
+
+table th,
+table td {
+    padding: 20px;
+    background: #EEEEEE;
+    text-align: center;
+    border-bottom: 1px solid #FFFFFF;
+}
+
+table th {
+    white-space: nowrap;
+    font-weight: normal;
+}
+
+table td {
+    text-align: right;
+}
+
+table td h3 {
+    color: #05746d;
+    font-size: 1.2em;
+    font-weight: normal;
+    margin: 0 0 0.2em 0;
+}
+
+table .th_no,
+table .th_desc,
+table .th_unit {
+    color: #FFFFFF;
+    font-size: 1.6em;
+    background: #05746d;
+}
+
+table .desc {
+    text-align: right;
+}
+
+table .unit {
+    background: #DDDDDD;
+}
+
+table .qty {}
+
+table .total {
+    background: #05746d;
+    color: #FFFFFF;
+}
+
+table td.unit,
+table td.qty,
+table td.total {
+    font-size: 1.2em;
+}
+
+table tbody tr:last-child td {
+    border: none;
+}
+
+table tfoot td {
+    padding: 10px 20px;
+    background: #FFFFFF;
+    border-bottom: none;
+    font-size: 1.2em;
+    white-space: nowrap;
+    border-top: 1px solid #AAAAAA;
+}
+
+table tfoot tr:first-child td {
+    border-top: none;
+}
+
+table tfoot tr:last-child td {
+    color: #05746d;
+    font-size: 1.4em;
+    border-top: 1px solid #05746d;
+}
+
+table tfoot tr td:first-child {
+    border: none;
+}
+
+#thanks {
+    font-size: 2em;
+    margin-bottom: 50px;
+}
+
+#notices {
+    padding-left: 6px;
+    border-left: 6px solid #0087C3;
+}
+
+#notices .notice {
+    font-size: 1.2em;
+}
+
+
+/**********************/
+
+.ul_li_border {}
+
+.ul_li_border h3 span {}
+
+.ul_li_border ul {
+    margin: 0;
+    padding: 0;
+}
+
+.ul_li_border ul li {
+    display: inline-block;
+    min-width: 49%;
+    border: 1px solid #eee;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    margin-bottom: 2px;
+}
+
+.ul_li_border ul li b {
+    display: inline-block;
+    padding: 5px 10px;
+    min-width: 110px;
+    margin-bottom: 5px;
+    margin-left: 10px;
+    border-left: 2px solid #eee;
+}
+
+.ul_li_border ul li span {}
+
+
+/*----*/
+
+.info_registration {}
+
+.info_registration h3 {}
+
+.info_registration p {
+    text-align: justify;
+    font-size: small;
+}
+
+
+/*********************/
+
+.certificate>section {
+    width: 29.7cm;
+    height: 21cm;
+}
+
+.certificate>section>img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+    z-index: 4;
+}
+
+.certificate>section>.body_certificate {
+    /*
+	position: relative;
+	z-index: 5;
+*/
+    z-index: 5;
+    width: 60%;
+    position: absolute;
+    right: 20%;
+    top: 45%;
+    text-align: justify;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    font-size: large;
+    line-height: 2;
+}
+
+.certificate>section>.body_certificate p {}
+
+
+/*********************/
+
+.approve {
+    border: 1px dotted #000;
+    padding: 0 20px;
+}
+
+.approve>ul {
+    display: inline-block;
+    padding-right: 2pc;
+}
+
+.approve>ul>li {
+    display: inline-block;
+    padding-right: 1pc;
+}
+
+.approve>ul>li>span {
+    color: #999;
+}
+
+
+/*********************/
+
+footer {
+    color: #777777;
+    width: 95%;
+    position: absolute;
+    bottom: 20px;
+    border-top: 2px solid #ccc;
+    padding: 8px 0;
+    text-align: center;
+}

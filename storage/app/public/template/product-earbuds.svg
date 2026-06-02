@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="640" viewBox="0 0 900 640" role="img" aria-label="Wireless earbuds">
+  <rect width="900" height="640" rx="44" fill="#FFF9EF"/>
+  <path d="M190 500h520" stroke="#E8DDCF" stroke-width="6" stroke-linecap="round"/>
+  <rect x="325" y="284" width="250" height="176" rx="44" fill="#3E4A3F"/>
+  <rect x="354" y="314" width="192" height="100" rx="30" fill="#FFFCF6"/>
+  <path d="M390 278c-42 0-76-34-76-76s34-76 76-76 76 34 76 76v76h-54v-72c0-14-9-24-22-24s-22 10-22 24v72z" fill="#8FAF8B"/>
+  <path d="M510 278v-76c0-42 34-76 76-76s76 34 76 76-34 76-76 76h-22v-72c0-14 9-24 22-24s22 10 22 24-10 22-22 22h-22v50z" fill="#CFA6A0"/>
+  <circle cx="450" cy="432" r="13" fill="#8FAF8B"/>
+</svg>

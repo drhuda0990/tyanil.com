@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /adminPanel/
+Disallow: /admin/
+Disallow: /customer/
+Disallow: /login
+
+Sitemap: https://www.tyanil.com/sitemap.xml

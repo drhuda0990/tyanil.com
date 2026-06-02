@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="84" viewBox="0 0 260 84" role="img" aria-label="متجر تجريبي Demo Store">
+  <rect width="260" height="84" rx="22" fill="#3E4A3F"/>
+  <rect x="16" y="16" width="52" height="52" rx="16" fill="#8FAF8B"/>
+  <path d="M29 35h5.5l3.2 15.5h22.8l3.4-12.8H39.6" fill="none" stroke="#FFFCF6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="42" cy="58" r="3.5" fill="#CFA6A0"/>
+  <circle cx="57" cy="58" r="3.5" fill="#CFA6A0"/>
+  <text x="82" y="38" fill="#FFFCF6" font-family="Tajawal, Arial, sans-serif" font-size="24" font-weight="800">متجر تجريبي</text>
+  <text x="84" y="59" fill="#EAD7D3" font-family="Arial, sans-serif" font-size="15" font-weight="700">Demo Store</text>
+</svg>

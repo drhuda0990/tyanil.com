@@ -1,0 +1,526 @@
+[{
+        "name": "إضافة الخدمة المضمنة بالفاتورة",
+        "guard_name": "service_invoice_item_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل الخدمة المضمنة بالفاتورة",
+        "guard_name": "service_invoice_item_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف الخدمة المضمنة بالفاتورة",
+        "guard_name": "service_invoice_item_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض الخدمة المضمنة بالفاتورة",
+        "guard_name": "service_invoice_item_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة فاتورة خدمة",
+        "guard_name": "service_invoice_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل فاتورة خدمة",
+        "guard_name": "service_invoice_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف فاتورة خدمة",
+        "guard_name": "service_invoice_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض فاتورة خدمة",
+        "guard_name": "service_invoice_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة uldg",
+        "guard_name": "customer_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل uldg",
+        "guard_name": "customer_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف uldg",
+        "guard_name": "customer_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض uldg",
+        "guard_name": "customer_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة تقييم",
+        "guard_name": "rating_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل تقييم",
+        "guard_name": "rating_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف تقييم",
+        "guard_name": "rating_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض تقييم",
+        "guard_name": "rating_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة قسيمة",
+        "guard_name": "discount_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل قسيمة",
+        "guard_name": "discount_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف قسيمة",
+        "guard_name": "discount_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض قسيمة",
+        "guard_name": "discount_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة فريق عمل",
+        "guard_name": "team_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل فريق عمل",
+        "guard_name": "team_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف فريق عمل",
+        "guard_name": "team_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض فريق عمل",
+        "guard_name": "team_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+
+    {
+        "name": "إضافة صلاحية",
+        "guard_name": "permission_add",
+        "type": "3",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل صلاحية",
+        "guard_name": "permission_edit",
+        "type": "3",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف صلاحية",
+        "guard_name": "permission_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض صلاحية",
+        "guard_name": "permission_view",
+        "type": "3",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة تعريف",
+        "guard_name": "definition_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل تعريف",
+        "guard_name": "definition_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف تعريف",
+        "guard_name": "definition_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض تعريف",
+        "guard_name": "definition_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "عرض الرسائل المرسله",
+        "guard_name": "message_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "إضافة مستخدم لوحة تحكم",
+        "guard_name": "user_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل مستخدم لوحة تحكم",
+        "guard_name": "user_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف مستخدم لوحة تحكم",
+        "guard_name": "user_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض مستخدم لوحة تحكم",
+        "guard_name": "user_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة تواصل",
+        "guard_name": "contact_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل تواصل",
+        "guard_name": "contact_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف تواصل",
+        "guard_name": "contact_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض تواصل",
+        "guard_name": "contact_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة تقسيمة خدمة",
+        "guard_name": "service_category_add",
+        "type": "3",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل تقسيمة خدمة",
+        "guard_name": "service_category_edit",
+        "type": "3",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف تقسيمة خدمة",
+        "guard_name": "service_category_delete",
+        "type": "3",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض تقسيمة خدمة",
+        "guard_name": "service_category_view",
+        "type": "3",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة عميل",
+        "guard_name": "trainee_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل عميل",
+        "guard_name": "trainee_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف عميل",
+        "guard_name": "trainee_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض عميل",
+        "guard_name": "trainee_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة مقال",
+        "guard_name": "post_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل مقال",
+        "guard_name": "post_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف مقال",
+        "guard_name": "post_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض مقال",
+        "guard_name": "post_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة خدمة",
+        "guard_name": "service_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل خدمة",
+        "guard_name": "service_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف خدمة",
+        "guard_name": "service_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض خدمة",
+        "guard_name": "service_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة شركاء نجاح",
+        "guard_name": "partner_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل شركاء نجاح",
+        "guard_name": "partner_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف شركاء نجاح",
+        "guard_name": "partner_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض شركاء نجاح",
+        "guard_name": "partner_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "عرض الإعدادات العامة",
+        "guard_name": "general_settings_view",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل الإعدادات العامة",
+        "guard_name": "general_settings_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "إضافة مشرف خدمة",
+        "guard_name": "service_admin_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل مشرف خدمة",
+        "guard_name": "service_admin_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف مشرف خدمة",
+        "guard_name": "service_admin_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض مشرف خدمة",
+        "guard_name": "service_admin_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    },
+    {
+        "name": "إضافة ميزة خدمة ",
+        "guard_name": "additional_features_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل ميزة خدمة ",
+        "guard_name": "additional_features_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف ميزة خدمة ",
+        "guard_name": "additional_features_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض ميزة خدمة ",
+        "guard_name": "additional_features_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    }, {
+        "name": "إضافة إعلان ",
+        "guard_name": "advertisement_add",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "تعديل إعلان ",
+        "guard_name": "advertisement_edit",
+        "type": "1",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "name": "حذف إعلان ",
+        "guard_name": "advertisement_delete",
+        "type": "1",
+        "created_at": "2022-03-31 08:23:50",
+        "updated_at": "2022-03-31 08:23:50"
+    },
+    {
+        "name": "عرض إعلان ",
+        "guard_name": "advertisement_view",
+        "type": "1",
+        "created_at": "2022-03-31 08:24:11",
+        "updated_at": "2022-03-31 08:24:11"
+    }
+]

@@ -1,0 +1,84 @@
+
+/*------ FONRS -------*/
+
+@font-face
+{
+	font-family: 'AlmaraiR';
+	src: url("../fonts/Almarai-Regular.ttf");
+}
+
+
+@font-face
+{
+	font-family: 'Monda';
+	src: url("fonts/En/Monda-Regular.ttf");
+}
+
+/*------ PUBLIC -------*/
+
+body, header  , input[type] , select , option, button , textarea  , select , option {
+    font-family:   'AlmaraiR'!important;
+    direction: rtl;
+    text-align: right;
+}
+
+/*------ PUBLIC -------*/
+.mr-2 {
+    margin-left:  .5rem;
+    margin-right: 0;
+}
+.mr-3 {
+    margin-left:  .75rem;
+    margin-right: 0;
+}
+
+.mr-6 {
+    margin-left: 1.5rem;
+    margin-right: 0;
+}
+
+.ml-3 {
+  margin-right:  .75rem;
+  margin-left: 0;
+}
+.ml-2 {
+  margin-right:  .5rem;
+  margin-left: 0;
+}
+.ml-8 {
+  margin-right: 2rem;
+  margin-left: 0;
+}
+
+/****/
+.ml-auto{
+  margin-right: 100px;
+  margin-left: 15px;
+}
+/****/
+.text-left{
+  text-align: right;
+}
+.text-right{
+  text-align: left;
+}
+/****/
+
+.sidebar-icon{
+  margin-right: 0;
+  margin-left: .75rem;
+}
+
+
+.pl-search {
+  padding-right: 2.75rem;
+  padding-left: 0;
+}
+
+
+/****/
+/*
+.open {
+    left: -15% !important;
+}
+*/
