@@ -52,6 +52,11 @@
                 rgba(79, 24, 63, .9);
         }
 
+        .ty-auth-card--dark h2,
+        .ty-auth-card--dark p {
+            color: #fff !important;
+        }
+
         .ty-auth-card h2 {
             margin-bottom: 8px;
             font-size: 1.65rem;
@@ -63,7 +68,7 @@
         }
 
         .ty-auth-card--dark p {
-            color: rgba(255, 255, 255, .78);
+            color: rgba(255, 255, 255, .78) !important;
         }
 
         .ty-auth-form {
@@ -85,7 +90,7 @@
         }
 
         .ty-auth-card--dark .ty-auth-field label {
-            color: rgba(255, 255, 255, .9);
+            color: rgba(255, 255, 255, .9) !important;
         }
 
         .ty-auth-field input {
@@ -114,7 +119,7 @@
         }
 
         .ty-auth-card--dark .ty-auth-check {
-            color: rgba(255, 255, 255, .84);
+            color: rgba(255, 255, 255, .84) !important;
         }
 
         .ty-auth-check input {
