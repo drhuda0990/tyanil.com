@@ -168,6 +168,7 @@
                     <li><a class="footer-policy-link" href='{{ url('page/1') }}'><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span class="tr-ar">الشروط والأحكام</span><span class="tr-en">Terms</span></a></li>
                     <li><a class="footer-policy-link" href='{{ url('page/2') }}'><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span class="tr-ar">سياسة الخصوصية</span><span class="tr-en">Privacy</span></a></li>
                     <li><a class="footer-policy-link" href='{{ url('page/3') }}'><i class="fa-solid fa-rotate-left" aria-hidden="true"></i><span class="tr-ar">سياسة الاسترجاع</span><span class="tr-en">Returns</span></a></li>
+                    <li><a class="footer-policy-link" href='{{ url('page/4') }}'><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span class="tr-ar">سياسة الشحن والتوصيل</span><span class="tr-en">Shipping</span></a></li>
                 </ul>
             </div>
             <div class="neweb-credit-row">
