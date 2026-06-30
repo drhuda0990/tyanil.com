@@ -49,6 +49,16 @@ class PaymentGatewaySetting extends Resource
             Text::make('Tap Public Key', 'tapPublicKey')
                 ->hideFromIndex(),
 
+            Heading::make('Moyasar - Apple Pay / Mada / Visa / Mastercard'),
+            Boolean::make('تفعيل Moyasar', 'moyasarPaymentActivate'),
+            Text::make('Moyasar Merchant ID', 'moyasarMerchantId')
+                ->hideFromIndex(),
+            Text::make('Moyasar Publishable Key', 'moyasarPublicKey')
+                ->hideFromIndex(),
+            Text::make('Moyasar Secret Key', 'moyasarSecretKey')
+                ->withMeta(['extraAttributes' => ['type' => 'password']])
+                ->onlyOnForms(),
+
             Heading::make('Tabby'),
             Boolean::make('تفعيل Tabby', 'tabbyPaymentActivate'),
             Text::make('Tabby Secret Key', 'tabbySectretKey')

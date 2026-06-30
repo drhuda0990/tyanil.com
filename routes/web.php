@@ -74,6 +74,10 @@ Route::get('/cartRemove/{service}/', $customerController . '@cartRemove')->name(
 Route::post('/code_id', $customerController . "@code_id")->name('code_id');
 Route::get('/manualLogin', $customerController . "@manualLogin")->name('manualLogin');
 Route::get('/check',  $customerController . "@check")->name('tap.check');
+Route::middleware('auth.customer')->group(function () use ($customerController) {
+  Route::get('/payment/moyasar/{paymentRequest}', $customerController . '@moyasarForm')->name('moyasar.form');
+  Route::get('/payment/moyasar/callback/{paymentRequest}', $customerController . '@moyasarCallback')->name('moyasar.callback');
+});
 Route::post('/logout',  "CustomerController@logout")->name('customer.logout');
 Route::post('/login',  "CustomerController@loginPost")->name('customer.login.post')->middleware('throttle:10,1');
 Route::post('/login/code',  "CustomerController@loginCode")->name('customer.login.access_code')->middleware('throttle:10,1');

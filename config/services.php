@@ -30,4 +30,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'moyasar' => [
+        'enabled' => env('MOYASAR_PAYMENT_ENABLED', false),
+        'merchant_id' => env('MOYASAR_MERCHANT_ID'),
+        'public_key' => env('MOYASAR_PUBLIC_KEY'),
+        'secret_key' => env('MOYASAR_SECRET_KEY'),
+    ],
+
 ];

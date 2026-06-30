@@ -28,6 +28,7 @@ use App\Services\PaymentService;
 use App\Support\InternalNotificationService;
 use App\Support\StoreSettings;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Session;
 use Salla\ZATCA\GenerateQrCode;
 use Salla\ZATCA\Tags\InvoiceDate;
@@ -726,6 +727,15 @@ class CustomerController extends Controller
 
 
             $amount = number_format((float)$amount, 2, '.', '');
+            if ($this->moyasarPaymentIsReady($generalSettings)) {
+                $moyasarPayment = $this->localPaymentData((float) $amount, 'INITIATED');
+                $paymentRequest = $this->newPaymentRequest($moyasarPayment, $request, $amount, $carts, $discount_id, 'moyasar');
+                $paymentRequest->payment_url = route('moyasar.form', ['paymentRequest' => $paymentRequest->id]);
+                $paymentRequest->save();
+
+                return redirect($paymentRequest->payment_url);
+            }
+
             if (!$this->tapPaymentIsReady($generalSettings)) {
                 $manualPayment = $this->localPaymentData((float) $amount, 'MANUAL');
                 $paymentRequest = $this->newPaymentRequest($manualPayment, $request, $amount, $carts, $discount_id, 'manual');
@@ -797,14 +807,188 @@ class CustomerController extends Controller
         return $paymentService->tapCheck($tap_id, $customer);
         // dd($request);
     }
+
+    public function moyasarForm(PaymentRequest $paymentRequest)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if (! $customer || (int) $paymentRequest->customer_id !== (int) $customer->id || $paymentRequest->payment_type !== 'moyasar') {
+            abort(404);
+        }
+
+        $settings = $this->moyasarSettings($this->generalSettings());
+
+        if (! $settings['enabled'] || empty($settings['public_key'])) {
+            return redirect()->route('customer.cart')->with('message', 'بوابة الدفع غير مفعلة حالياً');
+        }
+
+        return view('customer.moyasar', [
+            'paymentRequest' => $paymentRequest,
+            'amountHalalas' => $this->moyasarAmountInHalalas($paymentRequest->amount),
+            'publicKey' => $settings['public_key'],
+            'merchantId' => $settings['merchant_id'],
+            'callbackUrl' => route('moyasar.callback', ['paymentRequest' => $paymentRequest->id]),
+            'isLiveKeyOnHttp' => request()->getScheme() === 'http' && str_starts_with($settings['public_key'], 'pk_live_'),
+        ]);
+    }
+
+    public function moyasarCallback(Request $request, PaymentRequest $paymentRequest)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if (! $customer || (int) $paymentRequest->customer_id !== (int) $customer->id || $paymentRequest->payment_type !== 'moyasar') {
+            abort(404);
+        }
+
+        $moyasarPaymentId = (string) $request->query('id', '');
+
+        if ($moyasarPaymentId === '') {
+            return redirect()->route('customer.cart')->with('message', 'لم تصل بيانات عملية الدفع من مزود الخدمة');
+        }
+
+        if (ServiceInvoice::where('refrence_id', $moyasarPaymentId)->exists()) {
+            return redirect()->route('customer.dashboard')->with('message', 'تم إستكمال الدفع بنجاح');
+        }
+
+        $settings = $this->moyasarSettings($this->generalSettings());
+
+        if (empty($settings['secret_key'])) {
+            return redirect()->route('customer.cart')->with('message', 'بوابة الدفع غير مهيأة بالكامل');
+        }
+
+        $paymentData = $this->fetchMoyasarPayment($moyasarPaymentId, $settings['secret_key']);
+
+        if ($paymentData['error'] || ! $paymentData['data']) {
+            Log::warning('Moyasar payment lookup failed', [
+                'payment_request_id' => $paymentRequest->id,
+                'payment_id' => $moyasarPaymentId,
+                'error' => $paymentData['error'],
+            ]);
+
+            return redirect()->route('customer.cart')->with('message', 'تعذر التحقق من عملية الدفع');
+        }
+
+        $data = $paymentData['data'];
+        $status = strtolower((string) ($data->status ?? ''));
+        $currency = strtoupper((string) ($data->currency ?? ''));
+        $gatewayAmount = (int) ($data->amount ?? 0);
+        $expectedAmount = $this->moyasarAmountInHalalas($paymentRequest->amount);
+
+        $paymentRequest->payment_id = $data->id ?? $moyasarPaymentId;
+        $paymentRequest->status = $data->status ?? 'unknown';
+        $paymentRequest->response = json_encode($data);
+        $paymentRequest->save();
+
+        if ($status !== 'paid' || $currency !== 'SAR' || $gatewayAmount !== $expectedAmount) {
+            Log::warning('Moyasar payment rejected by local verification', [
+                'payment_request_id' => $paymentRequest->id,
+                'payment_id' => $moyasarPaymentId,
+                'status' => $status,
+                'currency' => $currency,
+                'gateway_amount' => $gatewayAmount,
+                'expected_amount' => $expectedAmount,
+            ]);
+
+            return redirect()->route('customer.cart')->with('message', 'لم تكتمل عملية الدفع أو أن بيانات العملية غير مطابقة');
+        }
+
+        $paymentResponse = PaymentResponse::firstOrNew([
+            'payment_id' => $moyasarPaymentId,
+            'payment_type' => 'moyasar',
+        ]);
+
+        if (! $paymentResponse->exists) {
+            $newPaymentResponse = collect($paymentRequest->toArray())
+                ->except(['id', 'created_at', 'updated_at', 'cart_items', 'check_num'])
+                ->toArray();
+
+            $paymentResponse->forceFill($newPaymentResponse);
+        }
+
+        $paymentResponse->response = json_encode($data);
+        $paymentResponse->status = $data->status;
+        $paymentResponse->customer_id = $customer->id;
+        $paymentResponse->save();
+
+        $orderData = json_decode(json_encode($data));
+        $orderData->amount = $gatewayAmount / 100;
+
+        $paymentDefinition = General::get_definition_id('electric_payment') ?: 0;
+        $paymentService = new PaymentService();
+        $paymentService->customerServiceOrder($paymentRequest, $moyasarPaymentId, $orderData, $paymentDefinition);
+
+        return redirect()->route('customer.dashboard')->with('message', 'تم إستكمال الدفع بنجاح');
+    }
+
     public static function generalSettings()
     {
         return StoreSettings::get();
     }
 
+    private function moyasarPaymentIsReady($generalSettings): bool
+    {
+        $settings = $this->moyasarSettings($generalSettings);
+
+        return $settings['enabled'] && ! empty($settings['public_key']) && ! empty($settings['secret_key']);
+    }
+
+    private function moyasarSettings($generalSettings): array
+    {
+        $enabled = $generalSettings->moyasarPaymentActivate;
+
+        if ($enabled === null) {
+            $enabled = config('services.moyasar.enabled');
+        }
+
+        return [
+            'enabled' => filter_var($enabled, FILTER_VALIDATE_BOOLEAN),
+            'merchant_id' => $generalSettings->moyasarMerchantId ?: config('services.moyasar.merchant_id'),
+            'public_key' => $generalSettings->moyasarPublicKey ?: config('services.moyasar.public_key'),
+            'secret_key' => $generalSettings->moyasarSecretKey ?: config('services.moyasar.secret_key'),
+        ];
+    }
+
     private function tapPaymentIsReady($generalSettings): bool
     {
         return (bool) $generalSettings->tapPaymentActivate && !empty($generalSettings->tapSectretKey);
+    }
+
+    private function moyasarAmountInHalalas($amount): int
+    {
+        return (int) round(((float) $amount) * 100);
+    }
+
+    private function fetchMoyasarPayment(string $paymentId, string $secretKey): array
+    {
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.moyasar.com/v1/payments/' . rawurlencode($paymentId),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+            CURLOPT_USERPWD => $secretKey . ':',
+            CURLOPT_HTTPHEADER => [
+                'Accept: application/json',
+            ],
+        ]);
+
+        $response = curl_exec($curl);
+        $error = curl_error($curl);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        if ($error) {
+            return ['data' => null, 'error' => $error];
+        }
+
+        $data = json_decode($response);
+
+        if ($statusCode >= 400 || ! $data) {
+            return ['data' => null, 'error' => $response ?: 'Invalid Moyasar response'];
+        }
+
+        return ['data' => $data, 'error' => null];
     }
 
     private function localPaymentData(float $amount, string $status): object
