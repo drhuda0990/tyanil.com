@@ -63,6 +63,7 @@ Route::get('/category/services/{id}/{sub?}', $HomePage . "@categoryServices")->n
 Route::get('/category/{id}/{slug?}', $HomePage . "@categoryShow")->name('category.show');
 Route::get('/service/{id}', $HomePage . "@service")->name('service.show');
 Route::get('/sitemap.xml', $HomePage . "@sitemap")->name('sitemap');
+Route::get('/.well-known/apple-developer-merchantid-domain-association', $HomePage . "@applePayDomainAssociation")->name('apple-pay.domain-association');
 Route::get('/login',  "CustomerController@login")->name('customer.login');
 Route::get('/loginInst',  "CustomerController@loginInst")->name('customer.loginInst');
 Route::get('/saveCountries',  $HomePage . "@saveCountries")->name('saveCountries');

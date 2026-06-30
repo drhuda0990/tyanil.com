@@ -17,6 +17,7 @@ use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
 use App\Service;
 use App\Support\InternalNotificationService;
+use App\Support\StoreSettings;
 use Illuminate\Support\Facades\DB;
 use App\Team;
 use Illuminate\Validation\Rule;
@@ -372,6 +373,22 @@ class HomeController extends Controller
         $xml .= '</urlset>' . PHP_EOL;
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
+
+    public function applePayDomainAssociation()
+    {
+        $settings = StoreSettings::get();
+        $content = trim((string) ($settings->moyasarApplePayDomainAssociation ?: env('MOYASAR_APPLE_PAY_DOMAIN_ASSOCIATION', '')));
+
+        if ($content === '') {
+            abort(404);
+        }
+
+        $content = str_replace(['\\r\\n', '\\n'], PHP_EOL, $content);
+
+        return response($content, 200)
+            ->header('Content-Type', 'text/plain')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     private function sitemapBaseUrl(): string

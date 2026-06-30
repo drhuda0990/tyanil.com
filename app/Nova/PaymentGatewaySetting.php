@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\Heading;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
 
 class PaymentGatewaySetting extends Resource
 {
@@ -57,6 +58,15 @@ class PaymentGatewaySetting extends Resource
                 ->hideFromIndex(),
             Text::make('Moyasar Secret Key', 'moyasarSecretKey')
                 ->withMeta(['extraAttributes' => ['type' => 'password']])
+                ->onlyOnForms(),
+
+            Heading::make('Apple Pay Web Registration'),
+            Text::make('Apple Pay Domain', 'moyasarApplePayDomainName')
+                ->help('الدومين المطلوب تسجيله في لوحة Moyasar، مثل: www.tyanil.com')
+                ->hideFromIndex(),
+            Textarea::make('Apple Pay Verification File', 'moyasarApplePayDomainAssociation')
+                ->help('الصقي محتوى ملف apple-developer-merchantid-domain-association الذي يتم تنزيله من لوحة Moyasar لتفعيل Apple Pay للدومين.')
+                ->alwaysShow()
                 ->onlyOnForms(),
 
             Heading::make('Tabby'),

@@ -184,6 +184,8 @@
                 apple_pay: {
                     country: 'SA',
                     label: 'Tyanil',
+                    supported_countries: ['SA'],
+                    merchant_capabilities: ['supports3DS'],
                     validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate'
                 },
                 metadata: {

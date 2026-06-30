@@ -79,6 +79,8 @@ class StoreSettings
             'moyasarMerchantId' => config('services.moyasar.merchant_id'),
             'moyasarPublicKey' => config('services.moyasar.public_key'),
             'moyasarSecretKey' => config('services.moyasar.secret_key'),
+            'moyasarApplePayDomainName' => env('MOYASAR_APPLE_PAY_DOMAIN', 'www.tyanil.com'),
+            'moyasarApplePayDomainAssociation' => env('MOYASAR_APPLE_PAY_DOMAIN_ASSOCIATION'),
             'sender_user' => null,
             'sender_password' => null,
             'sender_name' => config('app.name', 'Tyaniel'),
