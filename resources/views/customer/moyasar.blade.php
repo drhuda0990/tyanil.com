@@ -126,6 +126,10 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .ty-payment-form-error {
+            display: none;
+        }
     </style>
 @endsection
 
@@ -160,6 +164,9 @@
                         </div>
                     @else
                         <div class="mysr-form"></div>
+                        <div class="ty-payment-alert ty-payment-form-error" data-moyasar-error>
+                            تعذر تحميل نموذج الدفع. يرجى تحديث الصفحة أو المحاولة مرة أخرى.
+                        </div>
                     @endif
                 </div>
             </div>
@@ -171,28 +178,50 @@
     @unless ($isLiveKeyOnHttp)
         <script src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.9/dist/moyasar.umd.js"></script>
         <script>
-            Moyasar.init({
-                element: '.mysr-form',
-                amount: @json($amountHalalas),
-                currency: 'SAR',
-                description: @json('طلب متجر تيانيل رقم ' . $paymentRequest->id),
-                publishable_api_key: @json($publicKey),
-                callback_url: @json($callbackUrl),
-                methods: ['creditcard', 'applepay'],
-                supported_networks: ['mada', 'visa', 'mastercard'],
-                language: 'ar',
-                apple_pay: {
-                    country: 'SA',
-                    label: 'Tyanil',
-                    supported_countries: ['SA'],
-                    merchant_capabilities: ['supports3DS'],
-                    validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate'
-                },
-                metadata: {
-                    payment_request_id: @json((string) $paymentRequest->id),
-                    customer_id: @json((string) $paymentRequest->customer_id)
+            (function() {
+                const errorBox = document.querySelector('[data-moyasar-error]');
+                const showPaymentError = function(message) {
+                    if (!errorBox) {
+                        return;
+                    }
+
+                    errorBox.textContent = message || errorBox.textContent;
+                    errorBox.style.display = 'block';
+                };
+
+                try {
+                    if (!window.Moyasar) {
+                        showPaymentError('تعذر تحميل مزود الدفع. يرجى تحديث الصفحة أو المحاولة مرة أخرى.');
+                        return;
+                    }
+
+                    Moyasar.init({
+                        element: '.mysr-form',
+                        amount: @json($amountHalalas),
+                        currency: 'SAR',
+                        description: @json('طلب متجر تيانيل رقم ' . $paymentRequest->id),
+                        publishable_api_key: @json($publicKey),
+                        callback_url: @json($callbackUrl),
+                        methods: ['creditcard', 'applepay'],
+                        supported_networks: ['mada', 'visa', 'mastercard'],
+                        language: 'ar',
+                        apple_pay: {
+                            country: 'SA',
+                            label: 'Tyanil',
+                            supported_countries: ['SA'],
+                            merchant_capabilities: ['supports3DS'],
+                            validate_merchant_url: 'https://api.moyasar.com/v1/applepay/initiate'
+                        },
+                        metadata: {
+                            payment_request_id: @json((string) $paymentRequest->id),
+                            customer_id: @json((string) $paymentRequest->customer_id)
+                        }
+                    });
+                } catch (error) {
+                    console.error('Moyasar init failed', error);
+                    showPaymentError('تعذر تهيئة نموذج الدفع. يرجى المحاولة مرة أخرى أو التواصل معنا لإتمام الطلب.');
                 }
-            });
+            })();
         </script>
     @endunless
 @endsection

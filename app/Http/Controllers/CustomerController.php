@@ -827,8 +827,8 @@ class CustomerController extends Controller
             'amountHalalas' => $this->moyasarAmountInHalalas($paymentRequest->amount),
             'publicKey' => $settings['public_key'],
             'merchantId' => $settings['merchant_id'],
-            'callbackUrl' => route('moyasar.callback', ['paymentRequest' => $paymentRequest->id]),
-            'isLiveKeyOnHttp' => request()->getScheme() === 'http' && str_starts_with($settings['public_key'], 'pk_live_'),
+            'callbackUrl' => $this->moyasarCallbackUrl($paymentRequest),
+            'isLiveKeyOnHttp' => $this->isLocalLiveMoyasarPage($settings['public_key']),
         ]);
     }
 
@@ -956,6 +956,25 @@ class CustomerController extends Controller
     private function moyasarAmountInHalalas($amount): int
     {
         return (int) round(((float) $amount) * 100);
+    }
+
+    private function moyasarCallbackUrl(PaymentRequest $paymentRequest): string
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        if ($appUrl && ! str_contains($appUrl, '127.0.0.1') && ! str_contains($appUrl, 'localhost')) {
+            return $appUrl . route('moyasar.callback', ['paymentRequest' => $paymentRequest->id], false);
+        }
+
+        return route('moyasar.callback', ['paymentRequest' => $paymentRequest->id]);
+    }
+
+    private function isLocalLiveMoyasarPage(string $publicKey): bool
+    {
+        $host = request()->getHost();
+
+        return in_array($host, ['127.0.0.1', 'localhost', '::1'], true)
+            && str_starts_with($publicKey, 'pk_live_');
     }
 
     private function fetchMoyasarPayment(string $paymentId, string $secretKey): array
