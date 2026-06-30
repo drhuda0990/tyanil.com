@@ -294,6 +294,7 @@ class CustomerController extends Controller
         ])->save();
 
         event(new Registered($customer));
+        $this->sendWelcomeEmail($customer);
         Auth::guard('customer')->login($customer);
         General::addCustomerCart();
 
@@ -302,6 +303,78 @@ class CustomerController extends Controller
         }
 
         return redirect()->intended(route('customer.dashboard'))->with('message', 'تم إنشاء حسابك بنجاح');
+    }
+
+    public function emailVerificationNotice()
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if ($customer && $customer->hasVerifiedEmail()) {
+            return redirect()->route('customer.dashboard');
+        }
+
+        return view('auth.customer.verify');
+    }
+
+    public function emailVerificationVerify(Request $request, $id, $hash)
+    {
+        $customer = Customer::findOrFail($id);
+
+        if (! hash_equals((string) $hash, sha1($customer->getEmailForVerification()))) {
+            abort(403);
+        }
+
+        if (! $customer->hasVerifiedEmail()) {
+            $customer->markEmailAsVerified();
+            $customer->email_verified = 1;
+            $customer->save();
+        }
+
+        if (! Auth::guard('customer')->check()) {
+            Auth::guard('customer')->login($customer);
+        }
+
+        return redirect()->route('customer.dashboard')->with('message', 'تم تفعيل بريدك الإلكتروني بنجاح');
+    }
+
+    public function emailVerificationResend(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if (! $customer) {
+            return redirect()->route('customer.login');
+        }
+
+        if ($customer->hasVerifiedEmail()) {
+            return redirect()->route('customer.dashboard')->with('message', 'بريدك الإلكتروني مفعل بالفعل');
+        }
+
+        $customer->sendEmailVerificationNotification();
+
+        return back()->with('resent', true);
+    }
+
+    private function sendWelcomeEmail(Customer $customer): void
+    {
+        if (empty($customer->email)) {
+            return;
+        }
+
+        $template = Definition::where('slug', 'welcome_email')
+            ->where('activate', 1)
+            ->value('content');
+
+        if (! $template) {
+            $template = '<p>مرحباً [customer_name]،</p><p>أهلاً بك في تيانيل. حسابك جاهز لتسوق منتجات نسائية مختارة بعناية، ويمكنك متابعة طلباتك وعناوين الشحن من لوحة حسابك.</p><p>نتمنى لك تجربة تسوق راقية.</p>';
+        }
+
+        $body = str_replace(
+            ['[customer_name]', '[site_url]', '[store_name]', '[account_url]'],
+            [e($customer->name ?: 'عميلتنا'), e(url('/')), e(config('app.name', 'تيانيل')), e(route('customer.dashboard'))],
+            $template
+        );
+
+        General::sendMail('مرحباً بك في تيانيل', $body, 'customer welcome', $customer->email);
     }
 
     private function findCustomerForLogin(?string $identifier): ?Customer

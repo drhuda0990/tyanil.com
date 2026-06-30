@@ -267,10 +267,13 @@ class PaymentService
                         }
                     }
                 }
-                $addtion_txt = '';
+                $addtion_txt = '<p><strong>تفاصيل المنتج:</strong> ' . e($cart->service->title) . '</p>'
+                    . '<p><strong>رقم الطلب:</strong> #' . e($serviceInvoice->id ?? '') . '</p>'
+                    . '<p><strong>قيمة المنتج:</strong> ' . e(number_format((float) $serviceInvoiceItem->purchase_price, 2)) . ' ريال</p>'
+                    . '<p>يمكنك متابعة حالة الطلب من لوحة حسابك في تيانيل.</p>';
                 if ($serviceInvoiceItem->book_type == 2 && $cart->service) {
                     if ($cart->service->attachment) {
-                        $addtion_txt .= PHP_EOL . 'رابط النسخة الإلكترونية:' . PHP_EOL . Storage::disk('books')->url($cart->service->attachment) . PHP_EOL;
+                        $addtion_txt .= '<p>رابط النسخة الإلكترونية: <a href="' . e(Storage::disk('books')->url($cart->service->attachment)) . '">اضغط هنا</a></p>';
                     }
                 }
                 $this->send_notification_customer($cart->service, $customer, $addtion_txt);

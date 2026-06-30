@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $request['title'] ?? config('app.name', 'تيانيل') }}</title>
+    <title>{{ $title }}</title>
 </head>
 
 <body style="margin:0;padding:0;background:#fff7f4;color:#4b213f;font-family:Tahoma,Arial,sans-serif;">
@@ -23,14 +23,20 @@
                             @if ($logoUrl)
                                 <img src="{{ $logoUrl }}" alt="{{ $settings->name }}" style="max-width:170px;height:auto;display:block;margin:0 auto 12px;">
                             @endif
-                            <div style="font-size:22px;line-height:1.7;font-weight:700;color:#fff4ef;">
-                                {{ $request['title'] ?? 'رسالة من تيانيل' }}
-                            </div>
+                            <div style="font-size:22px;line-height:1.7;font-weight:700;color:#fff4ef;">{{ $title }}</div>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:30px 28px;font-size:16px;line-height:2;color:#5d4052;">
-                            {!! $request['body'] !!}
+                            {!! $body !!}
+                            @if (!empty($actionUrl))
+                                <div style="text-align:center;margin-top:28px;">
+                                    <a href="{{ $actionUrl }}"
+                                        style="display:inline-block;background:#d989a3;color:#ffffff;text-decoration:none;border-radius:999px;padding:13px 28px;font-weight:700;">
+                                        {{ $actionText ?? 'متابعة' }}
+                                    </a>
+                                </div>
+                            @endif
                         </td>
                     </tr>
                     <tr>
@@ -46,9 +52,6 @@
                         </td>
                     </tr>
                 </table>
-                <div style="font-size:12px;color:#9a8291;margin-top:16px;">
-                    &copy; {{ date('Y') }} {{ $settings->name ?? config('app.name', 'تيانيل') }}. جميع الحقوق محفوظة.
-                </div>
             </td>
         </tr>
     </table>

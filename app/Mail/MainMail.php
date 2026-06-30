@@ -28,23 +28,13 @@ class MainMail extends Mailable
    */
   public function build()
   {
-    /*
-      return $this->view('emails.'.$this->request->e_page)
-                  //->from($this->request->e_from)
-                  //->from(' HPCC ')
-                  ->from(Config('setting.MAIN_EMAIL_ADMIN'))
-                  ->subject('HPCC | '.$this->request->e_title);
-      */
-
-
-
     if (!empty($this->request['bcc'])) {
       $this->bcc($this->request['bcc']);
     }
 
-    return $this->markdown('emails.main')
-      //->from('store@example.test')
-      ->subject(env("APP_NAME") . '|' . $this->request['title'])
+    return $this->view('emails.main')
+      ->from(config('mail.from.address'), config('mail.from.name'))
+      ->subject(config('app.name', 'تيانيل') . ' | ' . $this->request['title'])
       ->with('request', $this->request);
 
 

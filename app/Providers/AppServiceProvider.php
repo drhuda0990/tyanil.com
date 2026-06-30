@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Support\StoreSettings;
+use App\Support\MailSettings;
 use App\Observers\ProductObserver;
 use App\Service;
 use Illuminate\Support\ServiceProvider;
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
      Schema::defaultStringLength(125);
+      MailSettings::apply();
       Service::observe(ProductObserver::class);
       $this->app->bind('path.public', function() {
            return base_path().'/public';

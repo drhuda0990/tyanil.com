@@ -80,6 +80,7 @@ class Definition extends Resource
                     '3' => 'حالة الخدمة المقدمة',
                     '4' => 'طريقة الدفع',
                     '5' => 'نوع من انواع توصل معنا',
+                    '8' => 'رسائل المتجر والبريد',
                 ])
                 ->rules('required')
                 ->displayUsingLabels(),

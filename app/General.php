@@ -69,6 +69,7 @@ class General extends Model
       $body = $General_class->emailMessageEdit($body);
     }
     $body = str_replace("&nbsp;", "<br>", $body);
+    $body = self::sanitizeEmailHtml($body);
 
     //-----------------
     $data = array(
@@ -94,13 +95,22 @@ class General extends Model
         $to =  json_encode($BCC);
       }
 
-      $sender  = env("MAIL_FROM_ADDRESS");
+      $sender  = config("mail.from.address");
       $state = true;
       //-----------------
       $General_class->DB_Message($title, $body, $section, $sender, $to, $body, 3, $state);
     } catch (\Throwable $e) {
       report($e); // ignored
     }
+  }
+  public static function sanitizeEmailHtml($html)
+  {
+    $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><a><h1><h2><h3><h4><span><div><small>';
+    $html = strip_tags((string) $html, $allowedTags);
+    $html = preg_replace("/\s+on[a-z]+\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s>]+)/i", '', $html);
+    $html = preg_replace('/javascript\s*:/i', '#', $html);
+
+    return $html;
   }
   public static function messageEdit($messageContent, $course_id = null, $trainee_email = null)
   {

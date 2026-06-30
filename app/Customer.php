@@ -3,15 +3,17 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class Customer extends Authenticatable // implements MustVerifyEmail
+class Customer extends Authenticatable implements MustVerifyEmailContract
 {
 
-  use HasFactory, LogsActivity;
+  use HasFactory, LogsActivity, MustVerifyEmail, Notifiable;
   public $table = "customers";
   protected $guard = 'customer';
   protected $fillable = [
@@ -20,9 +22,22 @@ class Customer extends Authenticatable // implements MustVerifyEmail
     'phone',  // Add the phone field here
   ];
 
+  protected $casts = [
+    'email_verified_at' => 'datetime',
+  ];
+
   public function getActivitylogOptions(): LogOptions
   {
     return LogOptions::defaults()->logAll();
+  }
+
+  public function sendEmailVerificationNotification()
+  {
+    if (empty($this->email)) {
+      return;
+    }
+
+    $this->notify(new \App\Notifications\CustomerVerifyEmail());
   }
   public function serviceInvoices()
   {

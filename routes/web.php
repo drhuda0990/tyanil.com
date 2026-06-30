@@ -84,6 +84,9 @@ Route::post('/login',  "CustomerController@loginPost")->name('customer.login.pos
 Route::post('/login/code',  "CustomerController@loginCode")->name('customer.login.access_code')->middleware('throttle:10,1');
 Route::get('/register',  "CustomerController@login")->name('customer.register');
 Route::post('/register',  "CustomerController@registerPost")->name('customer.register.post')->middleware('throttle:5,1');
+Route::get('/customer/email/verify', $customerController . "@emailVerificationNotice")->name('customer.verification.notice')->middleware('auth.customer');
+Route::get('/customer/email/verify/{id}/{hash}', $customerController . "@emailVerificationVerify")->name('customer.verification.verify')->middleware(['signed', 'throttle:6,1']);
+Route::post('/customer/email/verification-notification', $customerController . "@emailVerificationResend")->name('customer.verification.send')->middleware(['auth.customer', 'throttle:6,1']);
 Route::get('/page/{id}/', $HomePage . "@post")->name('pages');
 Route::get('/contacts', $HomePage . "@contacts")->name('contact');
 Route::post('/contacts', $HomePage . "@contacts_post")->middleware('throttle:5,1');
