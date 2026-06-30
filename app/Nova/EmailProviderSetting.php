@@ -31,6 +31,7 @@ class EmailProviderSetting extends Resource
         return [
             ID::make()->sortable(),
             Heading::make('إعدادات الإرسال'),
+            Heading::make('لأفضل وصول إلى البريد الوارد: استخدم بريد المرسل من نفس النطاق info@tyanil.com، وفعل SPF وDKIM وDMARC في DNS، ولا تستخدم الإرسال الجماعي بدون رابط إلغاء اشتراك.'),
             Boolean::make('تفعيل إشعارات البريد', 'emailNotificationsActivate'),
             Select::make('مزود البريد', 'mail_provider')
                 ->options([
@@ -42,8 +43,13 @@ class EmailProviderSetting extends Resource
                 ->displayUsingLabels(),
             Text::make('MAIL_MAILER', 'MAIL_MAILER')->hideFromIndex(),
             Text::make('MAIL_FROM_NAME', 'MAIL_FROM_NAME')->hideFromIndex(),
-            Text::make('MAIL_FROM_ADDRESS', 'MAIL_FROM_ADDRESS')->hideFromIndex(),
-            Text::make('بريد تنبيهات الإدارة', 'admin_notification_email')->hideFromIndex(),
+            Text::make('MAIL_FROM_ADDRESS', 'MAIL_FROM_ADDRESS')
+                ->rules('nullable', 'email')
+                ->help('يفضل أن يكون info@tyanil.com حتى تتطابق هوية المرسل مع النطاق.')
+                ->hideFromIndex(),
+            Text::make('بريد تنبيهات الإدارة', 'admin_notification_email')
+                ->rules('nullable', 'email')
+                ->hideFromIndex(),
 
             Heading::make('SMTP'),
             Text::make('MAIL_HOST', 'MAIL_HOST')->hideFromIndex(),

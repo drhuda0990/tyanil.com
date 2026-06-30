@@ -9,14 +9,14 @@ use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 use Laravel\Nova\Fields\Boolean;
-use Laravel\Nova\Fields\Heading;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use App\General;
+use App\Mail\MainMail;
 use Laravel\Nova\Fields\Text;
-use Mailgun\Mailgun;
+use Laravel\Nova\Fields\Textarea;
 use App\Customer;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class SendEmail extends Action
 {
@@ -37,53 +37,55 @@ class SendEmail extends Action
    */
   public function handle(ActionFields $fields, Collection $models)
   {
-    $mg = Mailgun::create(env('MAILGUN_SECRET'));
-    $domain = env('MAILGUN_DOMAIN');
+    $title = trim((string) $fields->title);
+    $body = General::sanitizeEmailHtml(nl2br(e((string) $fields->body)));
+    $sent = 0;
 
-    // Send to all opted-in store customers.
     if ($fields->all_customers) {
-
-      // Fetch valid emails only
-      $customers = Customer::query()
+      Customer::query()
         ->where('prevent_advertising_emails', '!=', 1)
         ->whereNotNull('email')
         ->where('email', '!=', '')
         ->whereNotIn('email', ['@', '#', '0', '+', '&'])
-        ->pluck('email')
-        ->toArray();
+        ->orderBy('id')
+        ->chunk(25, function ($customers) use ($title, $body, &$sent) {
+          foreach ($customers as $customer) {
+            if (! filter_var($customer->email, FILTER_VALIDATE_EMAIL)) {
+              continue;
+            }
 
-      // Gmail-safe batch size
-      $customers = array_chunk($customers, 50);
+            Mail::to($customer->email)->send(new MainMail([
+              'title' => $title,
+              'body' => $body,
+              'mail_category' => 'marketing',
+              'unsubscribe_url' => URL::signedRoute('email.unsubscribe', ['customer' => $customer->id]),
+            ]));
 
-      foreach ($customers as $batch) {
+            $sent++;
+          }
 
-        $mg->messages()->send($domain, [
-          'from'  => env('APP_NAME') . '<' . env('MAIL_FROM_ADDRESS') . '>',
-          'to'    => env('MAIL_FROM_ADDRESS'),
-          'bcc'   => $batch,
-          'subject' => $fields->title,
-          'template' => $fields->template_name,
-          'h:Message-Id' => '<' . Str::uuid() . '@' . env('MAIL_FROM_ADDRESS') . '>',
-          'h:List-Unsubscribe' => '<mailto:unsubscribe@' . $domain . '>',
-          'h:List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
-        ]);
+          sleep(2);
+        });
+    }
 
-        // Slow down to avoid Gmail rate limits
-        sleep(4);
+    if ($fields->specific_email_boolean) {
+      $email = trim((string) $fields->specific_email);
+
+      if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $customer = Customer::where('email', $email)->first();
+
+        Mail::to($email)->send(new MainMail([
+          'title' => $title,
+          'body' => $body,
+          'mail_category' => $customer ? 'marketing' : 'transactional',
+          'unsubscribe_url' => $customer ? URL::signedRoute('email.unsubscribe', ['customer' => $customer->id]) : null,
+        ]));
+
+        $sent++;
       }
     }
 
-    // Send to specific email
-    if ($fields->specific_email_boolean) {
-      $mg->messages()->send($domain, [
-        'from'  => env('APP_NAME') . '<' . env('MAIL_FROM_ADDRESS') . '>',
-        'to'    => env('MAIL_FROM_ADDRESS'),
-        'bcc'   => $fields->specific_email,
-        'subject' => $fields->title,
-        'template' => $fields->template_name,
-        'h:Message-Id' => '<' . Str::uuid() . '@' . env('MAIL_FROM_ADDRESS') . '>',
-      ]);
-    }
+    return Action::message('تم إرسال ' . $sent . ' رسالة بريد عبر إعدادات البريد الحالية للمتجر.');
   }
 
 
@@ -96,7 +98,9 @@ class SendEmail extends Action
   {
     return [
       Text::make('العنوان', 'title')->rules('required'),
-      Text::make('اسم القالب المستخدم في الايميل من mailgun', 'template_name')->help('template2')->rules('required'),
+      Textarea::make('محتوى الرسالة', 'body')
+        ->help('اكتب نص الرسالة بدون مبالغة في الروابط أو الصور لضمان وصول أفضل للبريد الوارد.')
+        ->rules('required'),
       Text::make('الايميل الذي يتم ارسال الرسالة إلية', 'specific_email'),
       Boolean::make('إرسال  الرسالة لإيميل محدد', 'specific_email_boolean'),
       Boolean::make('إرسال الرسالة لجميع عملاء المتجر', 'all_customers')->help('قد تأخذ عملية الإرسال دقائق حسب عدد العملاء'),

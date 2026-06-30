@@ -31,6 +31,12 @@
                     <tr>
                         <td style="padding:30px 28px;font-size:16px;line-height:2;color:#5d4052;">
                             {!! $request['body'] !!}
+                            @if (!empty($request['unsubscribe_url']))
+                                <div style="margin-top:26px;padding-top:18px;border-top:1px solid #ead3dc;color:#8a7281;font-size:13px;line-height:1.8;text-align:center;">
+                                    وصلتك هذه الرسالة لأنك مشتركة في تحديثات متجر تيانيل.
+                                    <a href="{{ $request['unsubscribe_url'] }}" style="color:#4b213f;text-decoration:underline;">إلغاء الاشتراك من الرسائل التسويقية</a>
+                                </div>
+                            @endif
                         </td>
                     </tr>
                     <tr>

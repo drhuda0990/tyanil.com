@@ -61,8 +61,9 @@ class StoreSettings
             'color_1' => '#D989A3',
             'color_2' => '#4B213F',
             'color_3' => '#FFF4EF',
-            'email_1' => 'hello@tyaniel.com',
-            'email_2' => 'care@tyaniel.com',
+            'email_1' => 'info@tyanil.com',
+            'email_2' => 'info@tyanil.com',
+            'website' => 'https://www.tyanil.com',
             'phone' => '0500000000',
             'mobile' => '0500000000',
             'whatsapp' => '500000000',
@@ -95,7 +96,7 @@ class StoreSettings
             'contactNotificationsActivate' => true,
             'customerNotificationsActivate' => true,
             'inventoryNotificationsActivate' => false,
-            'admin_notification_email' => 'care@tyaniel.com',
+            'admin_notification_email' => 'info@tyanil.com',
             'admin_notification_phone' => '0500000000',
         ];
     }

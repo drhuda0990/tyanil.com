@@ -66,6 +66,9 @@ Route::get('/sitemap.xml', $HomePage . "@sitemap")->name('sitemap');
 Route::get('/.well-known/apple-developer-merchantid-domain-association', $HomePage . "@applePayDomainAssociation")->name('apple-pay.domain-association');
 Route::get('/login',  "CustomerController@login")->name('customer.login');
 Route::get('/loginInst',  "CustomerController@loginInst")->name('customer.loginInst');
+Route::match(['get', 'post'], '/email/unsubscribe/{customer}', $customerController . '@emailUnsubscribe')
+  ->name('email.unsubscribe')
+  ->middleware('signed');
 Route::get('/saveCountries',  $HomePage . "@saveCountries")->name('saveCountries');
 Route::post('/cart_update', $customerController . "@cart_update")->name('customer.cart.update')->middleware('throttle:30,1');
 Route::post('/cart_add', $customerController . "@cart_apply_post")->name('customer.cart_add')->middleware('throttle:30,1');

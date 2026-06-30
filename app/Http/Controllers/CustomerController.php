@@ -354,6 +354,18 @@ class CustomerController extends Controller
         return back()->with('resent', true);
     }
 
+    public function emailUnsubscribe(Request $request, Customer $customer)
+    {
+        $customer->prevent_advertising_emails = 1;
+        $customer->save();
+
+        if ($request->isMethod('post')) {
+            return response('unsubscribed', 200)->header('Content-Type', 'text/plain; charset=UTF-8');
+        }
+
+        return view('auth.customer.unsubscribe', compact('customer'));
+    }
+
     private function sendWelcomeEmail(Customer $customer): void
     {
         if (empty($customer->email)) {

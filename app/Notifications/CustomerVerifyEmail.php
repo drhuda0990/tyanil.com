@@ -27,12 +27,17 @@ class CustomerVerifyEmail extends Notification
 
         return (new MailMessage)
             ->subject('تفعيل بريدك الإلكتروني في تيانيل')
-            ->view('emails.customer-template', [
+            ->view(['emails.customer-template', 'emails.customer-template-text'], [
                 'title' => 'تفعيل بريدك الإلكتروني',
                 'body' => $body,
                 'actionText' => 'تفعيل البريد الإلكتروني',
                 'actionUrl' => $verificationUrl,
-            ]);
+            ])
+            ->withSymfonyMessage(function ($message) {
+                $headers = $message->getHeaders();
+                $headers->addTextHeader('Auto-Submitted', 'auto-generated');
+                $headers->addTextHeader('X-Auto-Response-Suppress', 'All');
+            });
     }
 
     protected function verificationUrl(MustVerifyEmail $notifiable): string
