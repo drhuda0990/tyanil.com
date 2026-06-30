@@ -55,6 +55,30 @@
         });
     </script>
 @endif
+@if (session('cartAdded'))
+    <script>
+        const cartAddedMessage = @json(session('cartAdded'));
+        Swal.fire({
+            title: "",
+            icon: "success",
+            html: "<br>" +
+                window.tyanielEscapeHtml(cartAddedMessage) + '<br>' +
+                '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px;">' +
+                '<button type="button" role="button" tabindex="0" class="btn-one SwalBtn1" onclick="Swal.close()">' +
+                'متابعة التسوق' +
+                '</button>' +
+                '<a style="text-decoration:none;" class="btn-one SwalBtn1" href="{{ route('customer.cart') }}">' +
+                'الذهاب للسلة والدفع' +
+                '</a>' +
+                '</div>',
+            showCancelButton: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.getPopup().setAttribute('dir', 'rtl');
+            }
+        });
+    </script>
+@endif
 @if (session('info'))
     <script>
         const infoMessage = @json(session('info'));
@@ -98,10 +122,9 @@
             icon: "info",
             html: "<br>" +
                 window.tyanielEscapeHtml(noCartAddressMessage) + '<br>' +
-                '<a style="color:#4ea350;text-decoration:none;margin:5px;" href="{{ route('customer.newAddress') }}" ><button type="button" role="button" tabindex="0" class="SwalBtn1 btn-one">' +
-                '  إضافة عنوان ' +
-                '</button></a><br><button type="button" role="button" tabindex="0" class="btn-one SwalBtn1 bg-red">' +
-                ' إلغاء' + '</button>',
+                '<a style="color:#4ea350;text-decoration:none;margin:5px;" class="SwalBtn1 btn-one" href="{{ route('customer.cart') }}#checkout-address" >' +
+                'تعبئة العنوان داخل الدفع' +
+                '</a>',
             showCancelButton: false,
             showConfirmButton: false
 

@@ -27,6 +27,15 @@
                         </span>
                     </div>
                 @endif
+                <div class="footer-register-card footer-platform-license-card" aria-label="ترخيص منصة الأعمال">
+                    <span class="footer-register-card__icon" aria-hidden="true">
+                        <img src="{{ asset('images/business-platform-license.webp') }}" alt="">
+                    </span>
+                    <span class="footer-register-card__text">
+                        <span>ترخيص منصة الأعمال رقم</span>
+                        <strong>0000296437</strong>
+                    </span>
+                </div>
                 <ul class="mt-25">
                     {{-- <li>
                         <svg class="me-1" width="16" height="20" viewBox="0 0 16 20" fill="none"
@@ -171,15 +180,15 @@
                     <li><a class="footer-policy-link" href='{{ url('page/4') }}'><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span class="tr-ar">سياسة الشحن والتوصيل</span><span class="tr-en">Shipping</span></a></li>
                 </ul>
             </div>
-            <div class="neweb-credit-row">
-                <a class="neweb-credit" href="https://www.ne-wb.com" target="_blank" rel="noopener noreferrer"
-                    aria-label="تطوير وتصميم Neweb">
-                    <span class="neweb-credit__icon" aria-hidden="true">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <div class="jodfy-credit-row">
+                <a class="jodfy-credit" href="https://www.jodfy.com" target="_blank" rel="noopener noreferrer"
+                    aria-label="تطوير جودفاي Jodfy">
+                    <span class="jodfy-credit__logo" aria-hidden="true">
+                        <img src="{{ asset('images/jodfy-logo.jpeg') }}" alt="">
                     </span>
-                    <span class="neweb-credit__text">
-                        <span class="neweb-credit__arabic">تطوير وتصميم</span>
-                        <strong>Neweb</strong>
+                    <span class="jodfy-credit__text">
+                        <span class="jodfy-credit__arabic">تطوير جودفاي</span>
+                        <strong>Jodfy</strong>
                     </span>
                 </a>
             </div>
@@ -287,7 +296,7 @@
         }
     }
 
-    .neweb-credit-row {
+    .jodfy-credit-row {
         display: flex;
         justify-content: flex-start;
         direction: ltr;
@@ -295,7 +304,7 @@
         margin-left: calc((min(100vw, 1140px) - 100vw) / 2 + 1px);
     }
 
-    .neweb-credit {
+    .jodfy-credit {
         position: static !important;
         z-index: 1;
         display: inline-flex;
@@ -303,14 +312,14 @@
         gap: 12px;
         min-height: 40px;
         max-width: calc(100vw - 36px);
-        padding: 7px 14px 7px 10px !important;
+        padding: 6px 15px 6px 8px !important;
         border: 1px solid rgba(255, 255, 255, 0.78);
         border-radius: 999px;
-        color: #2F3B31 !important;
+        color: #24133A !important;
         background:
-            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.5) 32%, rgba(207, 166, 160, 0.28) 100%),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.5) 32%, rgba(126, 42, 241, 0.18) 100%),
             linear-gradient(135deg, rgba(255, 252, 246, 0.94), rgba(255, 249, 239, 0.72));
-        box-shadow: 0 18px 45px rgba(47, 59, 49, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+        box-shadow: 0 18px 45px rgba(58, 30, 91, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.72);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         font-size: 12px;
@@ -322,32 +331,39 @@
         transition: box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
     }
 
-    .neweb-credit::before {
+    .jodfy-credit::before {
         display: none;
     }
 
-    .neweb-credit__icon {
+    .jodfy-credit__logo {
         position: relative;
         display: grid;
         place-items: center;
-        flex: 0 0 26px;
-        width: 26px;
-        height: 26px;
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
-        color: #FFF9F7;
-        background: linear-gradient(135deg, #3E4A3F, #8FAF8B 66%, #CFA6A0);
-        box-shadow: 0 10px 24px rgba(47, 59, 49, 0.20);
+        background: #FFFFFF;
+        box-shadow: 0 10px 24px rgba(58, 30, 91, 0.20);
+        overflow: hidden;
     }
 
-    .neweb-credit__icon::after {
+    .jodfy-credit__logo::after {
         content: "";
         position: absolute;
-        inset: -4px;
+        inset: -3px;
         border-radius: inherit;
-        border: 1px solid rgba(207, 166, 160, 0.38);
+        border: 1px solid rgba(126, 42, 241, 0.28);
     }
 
-    .footer-two-area .footer__copyright .neweb-credit .neweb-credit__text {
+    .jodfy-credit__logo img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .footer-two-area .footer__copyright .jodfy-credit .jodfy-credit__text {
         position: relative;
         display: inline-flex;
         align-items: center;
@@ -357,39 +373,39 @@
         color: #4B213F !important;
     }
 
-    .footer-two-area .footer__copyright .neweb-credit .neweb-credit__arabic {
+    .footer-two-area .footer__copyright .jodfy-credit .jodfy-credit__arabic {
         display: inline-flex;
         color: #4B213F !important;
         font-weight: 900;
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
-    .footer-two-area .footer__copyright .neweb-credit .neweb-credit__text strong {
+    .footer-two-area .footer__copyright .jodfy-credit .jodfy-credit__text strong {
         display: inline-flex;
         align-items: center;
         padding: 1px 5px;
         border-radius: 999px;
-        color: #163D2C !important;
+        color: #4F12C9 !important;
         background: rgba(255, 255, 255, 0.58);
         font-size: 15px;
         font-weight: 900;
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
     }
 
-    .neweb-credit:hover {
-        color: #2F3B31 !important;
-        border-color: rgba(207, 166, 160, 0.58);
-        box-shadow: 0 20px 48px rgba(47, 59, 49, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    .jodfy-credit:hover {
+        color: #24133A !important;
+        border-color: rgba(126, 42, 241, 0.36);
+        box-shadow: 0 20px 48px rgba(58, 30, 91, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.82);
     }
 
     @media (max-width: 575px) {
-        .neweb-credit-row {
+        .jodfy-credit-row {
             justify-content: center;
             margin-left: 0;
             margin-top: 14px;
         }
 
-        .neweb-credit {
+        .jodfy-credit {
             padding: 9px 12px 9px 10px;
             font-size: 12px;
         }

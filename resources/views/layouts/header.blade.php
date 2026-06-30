@@ -136,40 +136,6 @@
                                     </li> --}}
                                 </ul>
                             </li>
-                            @if (Auth::guard('customer')->user())
-                                <li>
-                                    <a href="#0"> <i class="fa-solid fa-user"></i>
-                                        {{ Auth::guard('customer')->user()->name ? Auth::guard('customer')->user()->name : 'لوحة التحكم' }}
-                                        <i class="fa-solid fa-angle-down"></i></a>
-                                    <ul class="sub-menu">
-                                        <li>
-                                            <a href="{{ route('customer.info') }}"><span class="tr-ar">معلوماتي</span><span class="tr-en">Profile</span></a>
-                                        </li>
-                                        {{-- <li>
-                                            <a href="{{ route('cv.index') }}">السيرة الذاتية</a>
-                                        </li> --}}
-                                        <li>
-                                            <a href="{{ route('customer.allAddress') }}"><span class="tr-ar">العناوين</span><span class="tr-en">Addresses</span></a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ route('customer.services') }}"><span class="tr-ar">طلباتي</span><span class="tr-en">Orders</span></a>
-                                        </li>
-                                        <li>
-
-                                            <form method="POST" action="{{ route('customer.logout') }}">
-                                                @csrf
-                                                <a> <button type="submit" style="white">
-
-                                                        <span class="tr-ar">تسجيل خروج</span><span class="tr-en">Logout</span>
-                                                    </button>
-                                                </a>
-                                            </form>
-
-                                        </li>
-
-                                    </ul>
-                                </li>
-                            @endif
                             <li><a href="{{ route('contact') }}"><span class="tr-ar">اتصل بنا</span><span class="tr-en">Contact us</span></a></li>
                         </ul>
                     </nav>
@@ -219,14 +185,29 @@
                             {{ $total_item }}
                         </span>
                     </a>
+                    @if (Auth::guard('customer')->user())
+                        <div class="ty-account-action-wrap">
+                            <button type="button" class="ty-header-action ty-account-action"
+                                aria-label="حساب المستخدم" aria-haspopup="true">
+                                <i class="fa-solid fa-user"></i>
+                            </button>
+                            <div class="ty-account-menu" role="menu">
+                                <a href="{{ route('customer.info') }}" role="menuitem"><span class="tr-ar">معلوماتي</span><span class="tr-en">Profile</span></a>
+                                <a href="{{ route('customer.allAddress') }}" role="menuitem"><span class="tr-ar">العناوين</span><span class="tr-en">Addresses</span></a>
+                                <a href="{{ route('customer.services') }}" role="menuitem"><span class="tr-ar">طلباتي</span><span class="tr-en">Orders</span></a>
+                                <form method="POST" action="{{ route('customer.logout') }}">
+                                    @csrf
+                                    <button type="submit" role="menuitem"><span class="tr-ar">تسجيل خروج</span><span class="tr-en">Logout</span></button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ route('customer.login') }}" class="ty-header-action ty-account-action"
+                            aria-label="تسجيل الدخول">
+                            <i class="fa-solid fa-user"></i>
+                        </a>
+                    @endif
 
-                    <div class="menu-btns d-none d-lg-flex">
-
-                        @if (!Auth::guard('customer')->user())
-                            <a class="active" href="{{ route('customer.login') }}"><span class="tr-ar">تسجيل الدخول</span><span class="tr-en">Login</span></a>
-                        @endif
-
-                    </div>
                 </div>
                 <button class="menubars d-block d-lg-none" type="button" data-bs-toggle="offcanvas"
                     data-bs-target="#menubar">

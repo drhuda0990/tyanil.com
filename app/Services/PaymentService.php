@@ -147,11 +147,18 @@ class PaymentService
             }
             $total_price += $cart->amount;
         }
-        if ($ExistShipment) {
-            $total_price += $generalSettings->shipment_price;
-        }
         $total_price += $additional_feature_price;
-        return ['total_price' => $total_price, 'existShipment' => $ExistShipment];
+        $items_total = $total_price;
+        $shipment_price = $ExistShipment ? (float) ($generalSettings->shipment_price ?? 0) : 0;
+        $total_price += $shipment_price;
+
+        return [
+            'total_price' => $total_price,
+            'items_total' => $items_total,
+            'shipment_price' => $shipment_price,
+            'additional_feature_price' => $additional_feature_price,
+            'existShipment' => $ExistShipment,
+        ];
     }
     public function customerServiceOrder($paymentRequest, $refrence_id, $data, $payment_definition)
     {
@@ -195,19 +202,27 @@ class PaymentService
             if (($requestAmount == 0) || (($requestAmount == $gatewayAmount) && (($gatewayAmount == $cartTotal) || ($gatewayAmount == $price_dis)))) {
                 // dd($paymentRequest->amount, $data->amount, $cartTotal, $price_dis);
 
-                $generalSettings = $this->generalSettings();
+                $shipmentPrice = (float) ($cartTotalPrice['shipment_price'] ?? 0);
+                $invoiceShipmentPrice = 0;
+                if ($paymentRequest->customer_address && $shipmentPrice > 0) {
+                    $invoiceShipmentPrice = $discount_model
+                        ? ($shipmentPrice - (($shipmentPrice * $discount_model->discount) / 100))
+                        : $shipmentPrice;
+                }
+                $invoiceProductsAmount = max(0, $requestAmount - $invoiceShipmentPrice);
+
                 $serviceInvoice   = new ServiceInvoice();
                 $serviceInvoice->title             = $title;
                 $serviceInvoice->term_accept = 1;
                 $serviceInvoice->customer_id        = $customer->id;
-                $serviceInvoice->amount            = $paymentRequest->amount;
+                $serviceInvoice->amount            = $invoiceProductsAmount;
                 $serviceInvoice->method            = $payment_definition;
-                $serviceInvoice->service_price      =  $paymentRequest->amount;
+                $serviceInvoice->service_price      = $invoiceProductsAmount;
                 // $serviceInvoice->address           = $cart->address;
                 // $serviceInvoice->phone             = $cart->phone;
                 // $serviceInvoice->shipment_price      = $cart->shipment_price;
                 $serviceInvoice->discount_id       = $discount_model ? $discount_model->id : null;
-                $serviceInvoice->paid_amount = $paymentRequest->amount;
+                $serviceInvoice->paid_amount = $invoiceProductsAmount;
                 if ($paymentRequest->customer_address) {
                     $address = CustomerAddress::where([['id', $paymentRequest->customer_address], ['customer_id', $customer->id]])->first();
                     if ($address) {
@@ -217,7 +232,7 @@ class PaymentService
                         $serviceInvoice->street      = $address->street;
                         $serviceInvoice->address      = $address->address;
                         $serviceInvoice->city      = $address->city_id;
-                        $serviceInvoice->shipment_price = $discount_model ? ($generalSettings->shipment_price - (($generalSettings->shipment_price * $discount_model->discount) / 100)) : $generalSettings->shipment_price;
+                        $serviceInvoice->shipment_price = $invoiceShipmentPrice;
                         $serviceInvoice->customer_address_id = $paymentRequest->customer_address;
                     }
                 }

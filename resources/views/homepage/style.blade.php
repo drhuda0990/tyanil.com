@@ -12738,6 +12738,66 @@ CSS TABLE OF CONTENTS
         border-radius: 50% !important;
     }
 
+    .ty-account-action-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ty-account-action {
+        border-radius: 50% !important;
+    }
+
+    .ty-account-menu {
+        position: absolute;
+        top: calc(100% + 12px);
+        inset-inline-start: 0;
+        z-index: 1040;
+        min-width: 190px;
+        padding: 10px;
+        border: 1px solid rgba(217, 137, 163, 0.28);
+        border-radius: 18px;
+        background: rgba(255, 249, 247, 0.96);
+        box-shadow: 0 22px 48px rgba(75, 33, 63, 0.16);
+        backdrop-filter: blur(16px);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(8px);
+        transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+    }
+
+    .ty-account-action-wrap:hover .ty-account-menu,
+    .ty-account-action-wrap:focus-within .ty-account-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .ty-account-menu a,
+    .ty-account-menu button {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 12px;
+        border: 0;
+        border-radius: 12px;
+        color: #4B213F !important;
+        background: transparent;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 800;
+        text-align: start;
+        white-space: nowrap;
+    }
+
+    .ty-account-menu a:hover,
+    .ty-account-menu button:hover {
+        background: rgba(217, 137, 163, 0.14);
+    }
+
     @media (min-width: 992px) {
         .ty-search-action {
             display: none !important;

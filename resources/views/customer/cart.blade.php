@@ -3,6 +3,95 @@
 <!--* ********************************* -->
 @section('SCSS')
     <style>
+        .ty-checkout-card {
+            margin: 28px 0;
+            padding: 24px;
+            border: 1px solid rgba(217, 137, 163, .28);
+            border-radius: 18px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .94), rgba(255, 244, 239, .82));
+            box-shadow: 0 18px 42px rgba(75, 33, 63, .10);
+        }
+
+        .ty-checkout-card__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .ty-checkout-card__head h5 {
+            margin: 0;
+            color: #4B213F;
+            font-weight: 900;
+        }
+
+        .ty-checkout-card__head span {
+            color: #7b6574;
+            font-size: 14px;
+        }
+
+        .ty-checkout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .ty-checkout-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ty-checkout-field--wide {
+            grid-column: 1 / -1;
+        }
+
+        .ty-checkout-field label {
+            color: #4B213F;
+            font-weight: 800;
+        }
+
+        .ty-checkout-field input,
+        .ty-checkout-field select {
+            width: 100%;
+            min-height: 54px;
+            border: 1px solid rgba(75, 33, 63, .14);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .86);
+            color: #4B213F;
+            padding: 0 16px;
+        }
+
+        .ty-checkout-note {
+            margin: 14px 0 0;
+            color: #7b6574;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .ty-checkout-login {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 767px) {
+            .ty-checkout-card {
+                padding: 18px;
+            }
+
+            .ty-checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ty-checkout-card__head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
     </style>
 @endsection
 <!--* ********************************* -->
@@ -19,34 +108,6 @@
                             الكل</a> </h5>
                 @endif
             </div>
-            @if ($existShipment && \Auth::guard('customer')->user())
-                <hr>
-                <h5 class="wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"> عنوان الشحن
-                </h5>
-                <a class="fLeft" href="{{ route('customer.newAddress') }}">
-                    <button class="btn-one" type="submit">
-                        إضافة عنوان جديد
-                        <i class="fa fa-plus" aria-hidden="true"></i>
-                    </button>
-                </a>
-                <div class="row w-100">
-                    <br>
-                    <div class="col-lg-12 order-1 order-lg-2 ">
-                        <div class="accordion rtlDirection" id="accordionExample">
-                            @foreach (\Auth::guard('customer')->user()->allAddress as $key => $address)
-                                <label class="custom-radio w-100">
-                                    <input type="radio" form="form_submit_cart" name="address" value="{{ $address->id }}"
-                                        @if ($key == 0) required checked @endif>
-                                    <span class="radio-circle"></span>
-                                    @include('customer.addressSection')
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-                <hr>
-            @endif
-
             @foreach ($carts as $cart)
                 <div class="team-details__item mt-10 p0">
                     <div class="row g-4 align-items-center w100">
@@ -126,15 +187,21 @@
                     </div>
                 </form>
                 <hr>
+                <h5 class="wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"> مجموع المنتجات:
+                    <span>
+                        {{ number_format($itemsTotal, 2) }}
+                        SR
+                    </span>
+                </h5>
                 @if ($existShipment)
                     <h5 class="wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"> تكلفة الشحن:
                         <span>
-                            {{ number_format($gSetting->shipment_price, 2) }}
+                            {{ number_format($shipmentPrice, 2) }}
                             SR
                         </span>
                     </h5>
                 @endif
-                <h5 class="wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"> المجموع:
+                <h5 class="wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms"> المجموع النهائي:
                     <span id="cartTotal">
                         {{ number_format($totalPrice, 2) }}
                         SR
@@ -145,9 +212,84 @@
                     @csrf
                     <div id="discount_id_input"></div>
 
-                    <button class="btn-one1 fLeft" type="submit">
-                        <i class="fa-light fa-arrow-right-long"></i>
-                        إكمال الدفع</button>
+                    @if ($existShipment)
+                        @if (\Auth::guard('customer')->check())
+                            @php($customer = \Auth::guard('customer')->user())
+                            <section class="ty-checkout-card" id="checkout-address">
+                                <div class="ty-checkout-card__head">
+                                    <div>
+                                        <h5>عنوان الشحن والدفع</h5>
+                                        <span>يتم حفظه مع الطلب مباشرة دون الانتقال لصفحة أخرى.</span>
+                                    </div>
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <input type="hidden" name="checkout_address_id" value="{{ old('checkout_address_id', optional($checkoutAddress)->id) }}">
+                                <div class="ty-checkout-grid">
+                                    <div class="ty-checkout-field">
+                                        <label for="checkout_name">اسم المستلم</label>
+                                        <input id="checkout_name" name="checkout_name" type="text"
+                                            value="{{ old('checkout_name', optional($checkoutAddress)->name ?: $customer->name) }}" required>
+                                    </div>
+                                    <div class="ty-checkout-field">
+                                        <label for="checkout_phone">رقم الجوال</label>
+                                        <input id="checkout_phone" name="checkout_phone" type="tel"
+                                            value="{{ old('checkout_phone', optional($checkoutAddress)->phone ?: $customer->phone) }}" required>
+                                    </div>
+                                    <div class="ty-checkout-field">
+                                        <label for="checkout_email">البريد الإلكتروني</label>
+                                        <input id="checkout_email" name="checkout_email" type="email"
+                                            value="{{ old('checkout_email', optional($checkoutAddress)->email ?: $customer->email) }}" required>
+                                    </div>
+                                    <div class="ty-checkout-field">
+                                        <label for="checkout_country">الدولة</label>
+                                        <input id="checkout_country" name="checkout_country" type="text"
+                                            value="المملكة العربية السعوديه" readonly required>
+                                    </div>
+                                    <div class="ty-checkout-field">
+                                        <label for="checkout_city">المدينة</label>
+                                        <select id="checkout_city" name="checkout_city" required>
+                                            <option value="">اختاري المدينة</option>
+                                            @foreach ($cities as $city)
+                                                @php($selectedCity = old('checkout_city', optional($checkoutAddress)->city_id))
+                                                <option value="{{ $city->city_arName }}" @if ($selectedCity == $city->city_arName) selected @endif>
+                                                    {{ $city->city_arName }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="ty-checkout-field">
+                                        <label for="checkout_street">الحي</label>
+                                        <input id="checkout_street" name="checkout_street" type="text"
+                                            value="{{ old('checkout_street', optional($checkoutAddress)->street) }}" required>
+                                    </div>
+                                    <div class="ty-checkout-field ty-checkout-field--wide">
+                                        <label for="checkout_address">العنوان الوطني</label>
+                                        <input id="checkout_address" name="checkout_address" type="text"
+                                            value="{{ old('checkout_address', optional($checkoutAddress)->address) }}"
+                                            placeholder="مثال: رقم المبنى، الشارع، الرمز البريدي، الرقم الإضافي" required>
+                                    </div>
+                                </div>
+                                <p class="ty-checkout-note">العنوان إلزامي لإتمام الشحن، ويمكن تعديله هنا قبل كل طلب.</p>
+                            </section>
+                            <button class="btn-one1 fLeft" type="submit">
+                                <i class="fa-light fa-arrow-right-long"></i>
+                                إكمال الدفع
+                            </button>
+                        @else
+                            <section class="ty-checkout-card ty-checkout-login">
+                                <div>
+                                    <h5>تسجيل الدخول مطلوب لإتمام الدفع</h5>
+                                    <p class="ty-checkout-note">بعد تسجيل الدخول سيبقى المنتج في السلة ويمكنك إدخال عنوان الشحن هنا مباشرة.</p>
+                                </div>
+                                <a class="btn-one" href="{{ route('customer.login') }}">تسجيل الدخول</a>
+                            </section>
+                        @endif
+                    @else
+                        <button class="btn-one1 fLeft" type="submit">
+                            <i class="fa-light fa-arrow-right-long"></i>
+                            إكمال الدفع
+                        </button>
+                    @endif
                 </form>
             @endif
         </div>

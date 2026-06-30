@@ -463,6 +463,8 @@ class CustomerController extends Controller
         $paymentService = new PaymentService();
 
         $customer = Auth::guard('customer')->user();
+        $cities = City::all();
+        $checkoutAddress = null;
         $ip = $_SERVER['REMOTE_ADDR'];
         if ($customer) {
             if ($customer)
@@ -470,6 +472,7 @@ class CustomerController extends Controller
             if (Auth::guard('customer')->user()->cashCartBackUsage) {
                 Auth::guard('customer')->user()->cashCartBackUsage()->delete();
             }
+            $checkoutAddress = $customer->customerAddresses()->latest()->first();
         } else {
             $all_carts   =  Cart::where([['user_ip', $ip], ['customer_id', null]])->get();
         }
@@ -508,9 +511,11 @@ class CustomerController extends Controller
         //   dd($carts);
         $carts = $this->cartItems();
         $cartTotalPrice = $paymentService->cartTotalPrice($carts);
+        $itemsTotal = $cartTotalPrice['items_total'];
+        $shipmentPrice = $cartTotalPrice['shipment_price'];
         $totalPrice = $cartTotalPrice['total_price'];
         $existShipment = $cartTotalPrice['existShipment'];
-        return view('customer.cart', compact('carts', 'totalPrice', 'existShipment'));
+        return view('customer.cart', compact('carts', 'itemsTotal', 'shipmentPrice', 'totalPrice', 'existShipment', 'cities', 'checkoutAddress'));
     }
     public function cartRemove($id)
     {
@@ -575,7 +580,7 @@ class CustomerController extends Controller
     {
         $this->addToCart($request);
         return redirect()->back()->with(
-            'info',
+            'cartAdded',
             'تم الإضافة بنجاح'
         );
     }
@@ -751,13 +756,8 @@ class CustomerController extends Controller
             $cartTotalPrice = $paymentService->cartTotalPrice($carts);
             $existShipment = $cartTotalPrice['existShipment'];
             if ($existShipment) {
-                if (!$request->has('address')) {
-                    // Add a specific message to the session
-                    return redirect()->back()->with('noCartAddress', 'يجب ان تقوم بإضافة عنوان الشحن اولاً');
-                }
-                // $this->validate($request, [
-                //     'address'      => 'required',
-                // ]);
+                $address = $this->storeCheckoutAddress($request, $customer);
+                $request->merge(['address' => $address->id]);
             }
             $key = "Bearer $tapSecretAPIKey";
             $curl = curl_init();
@@ -1210,6 +1210,62 @@ class CustomerController extends Controller
 
         return redirect()->route('customer.allAddress')->with('message', 'تم إضافة العنوان بنجاح');
     }
+
+    private function storeCheckoutAddress(Request $request, Customer $customer): CustomerAddress
+    {
+        $this->validate($request, [
+            'checkout_name' => 'required|string|max:255',
+            'checkout_phone' => 'required|string|max:30',
+            'checkout_email' => 'required|email|max:255',
+            'checkout_country' => 'required|string|max:255',
+            'checkout_city' => 'required|string|max:255',
+            'checkout_street' => 'required|string|max:255',
+            'checkout_address' => 'required|string|max:1000',
+        ], [
+            'checkout_name.required' => 'اسم مستلم الشحنة مطلوب',
+            'checkout_phone.required' => 'رقم الجوال مطلوب لإتمام الشحن',
+            'checkout_email.required' => 'البريد الإلكتروني مطلوب لإرسال تحديثات الطلب',
+            'checkout_email.email' => 'البريد الإلكتروني غير صحيح',
+            'checkout_city.required' => 'المدينة مطلوبة',
+            'checkout_street.required' => 'الحي مطلوب',
+            'checkout_address.required' => 'العنوان الوطني مطلوب لإتمام عملية التوصيل',
+        ]);
+
+        if (! in_array($request->checkout_country, ['المملكة العربية السعوديه', 'المملكة العربية السعودية'], true)) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                redirect()->back()
+                    ->withInput()
+                    ->with('noCartAddress', 'ندعم الشحن داخل المملكة العربية السعودية فقط')
+            );
+        }
+
+        $data = [
+            'name' => $request->checkout_name,
+            'phone' => $request->checkout_phone,
+            'email' => $request->checkout_email,
+            'country_id' => 'المملكة العربية السعوديه',
+            'city_id' => $request->checkout_city,
+            'street' => $request->checkout_street,
+            'address' => $request->checkout_address,
+            'customer_id' => $customer->id,
+        ];
+
+        $address = null;
+        if ($request->filled('checkout_address_id')) {
+            $address = CustomerAddress::where('customer_id', $customer->id)
+                ->where('id', $request->checkout_address_id)
+                ->first();
+        }
+
+        if ($address) {
+            $address->update($data);
+
+            return $address;
+        }
+
+        return CustomerAddress::create($data);
+    }
+
     /**
      * Update the specified resource in storage.
      */
