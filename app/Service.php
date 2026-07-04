@@ -16,6 +16,8 @@ class Service extends Model implements HasMedia
 {
   use HasFactory, LogsActivity, InteractsWithMedia;
 
+  protected $guarded = ['id'];
+
 
   public function getActivitylogOptions(): LogOptions
   {
@@ -24,11 +26,35 @@ class Service extends Model implements HasMedia
   protected $casts = [
     'times_from_date' => 'datetime',
     'times_to_date' => 'datetime',
+    'quantity' => 'integer',
   ];
 
   public function getSeoRouteKeyAttribute()
   {
     return $this->slug ?: $this->id;
+  }
+
+  public function isSoldOut(): bool
+  {
+    return $this->quantity !== null && (int) $this->quantity <= 0;
+  }
+
+  public function getIsSoldOutAttribute(): bool
+  {
+    return $this->isSoldOut();
+  }
+
+  public function hasAvailableQuantity(int $requestedQuantity = 1): bool
+  {
+    return $this->quantity === null || (int) $this->quantity >= $requestedQuantity;
+  }
+
+  public function isPurchasable(): bool
+  {
+    return (int) $this->activate === 1
+      && (int) $this->advertizment_service !== 1
+      && (int) $this->not_available !== 1
+      && !$this->isSoldOut();
   }
 
   public static function servicePrice($id)

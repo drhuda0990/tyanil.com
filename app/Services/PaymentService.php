@@ -23,6 +23,7 @@ use App\Discount;
 use App\General;
 use App\PaymentResponse;
 use App\SerInvoiceItemsFeature;
+use App\Service;
 use App\ServiceInvoice;
 use App\ServiceInvoiceItem;
 use App\Support\InternalNotificationService;
@@ -264,6 +265,7 @@ class PaymentService
                 $serviceInvoiceItem->customer_id        = $customer->id;
                 $serviceInvoiceItem->activate        = 1;
                 $serviceInvoiceItem->save();
+                $this->decrementServiceQuantity($cart->service);
                 if ($cart->additional_features && count($cart->service->activateAdditionalFeatures) > 0) {
                     $cart_additional_features = json_decode($cart->additional_features, true) ?? [];
                     foreach ($cart_additional_features as $adFeature) {
@@ -376,6 +378,17 @@ class PaymentService
             $get_return       = $General->sendSMS($title, $body, $section,  $Phone_User);
         }
         return 1;
+    }
+
+    private function decrementServiceQuantity(?Service $service): void
+    {
+        if (!$service || $service->quantity === null) {
+            return;
+        }
+
+        Service::where('id', $service->id)
+            ->where('quantity', '>', 0)
+            ->decrement('quantity');
     }
 
 

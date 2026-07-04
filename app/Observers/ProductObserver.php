@@ -21,6 +21,10 @@ class ProductObserver
 
     private function fillSeoFields(Service $service, bool $creating): void
     {
+        if ($creating && $service->quantity === null) {
+            $service->quantity = 1;
+        }
+
         $title = trim(strip_tags((string) $service->title));
 
         if ($creating || blank($service->slug) || ($service->isDirty('title') && !$service->isDirty('slug'))) {

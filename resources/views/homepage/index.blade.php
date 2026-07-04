@@ -349,6 +349,10 @@
             object-fit: cover;
         }
 
+        .ty-product-card.is-sold-out .ty-product-card__media img {
+            filter: saturate(.72) brightness(.78);
+        }
+
         .ty-product-card__badge {
             position: absolute;
             top: 14px;
@@ -362,6 +366,15 @@
             font-size: 12px;
             font-weight: 900;
             backdrop-filter: blur(12px);
+        }
+
+        .ty-product-card__badge--sold-out {
+            color: #FFF4EF;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, .24), transparent 42%),
+                rgba(75, 33, 63, .9);
+            border-color: rgba(255, 244, 239, .74);
+            box-shadow: 0 14px 28px rgba(75, 33, 63, .22);
         }
 
         .ty-product-card__body {
@@ -436,6 +449,14 @@
         .ty-buy-btn:hover {
             color: var(--ty-ivory);
             background: var(--ty-plum);
+        }
+
+        .ty-buy-btn--disabled,
+        .ty-buy-btn--disabled:hover {
+            cursor: not-allowed;
+            color: rgba(255, 244, 239, .86);
+            background: rgba(75, 33, 63, .54);
+            opacity: .86;
         }
 
         .ty-benefits {
@@ -955,11 +976,16 @@
 
                 <div class="ty-products-grid">
                     @foreach ($featuredServices as $service)
-                        @php($summary = trim(strip_tags($service->summry ?? '')))
-                        <article class="ty-product-card">
+                        @php
+                            $summary = trim(strip_tags($service->summry ?? ''));
+                            $isSoldOut = $service->is_sold_out;
+                        @endphp
+                        <article class="ty-product-card {{ $isSoldOut ? 'is-sold-out' : '' }}">
                             <a class="ty-product-card__media" href="{{ route('service.show', ['id' => $service->seo_route_key]) }}">
                                 <img src="{{ $service->image_url }}" alt="{{ $service->title }}">
-                                <span class="ty-product-card__badge">{{ $badges[$service->id] ?? 'متوفر' }}</span>
+                                <span class="ty-product-card__badge {{ $isSoldOut ? 'ty-product-card__badge--sold-out' : '' }}">
+                                    {{ $isSoldOut ? 'نفذت الكمية' : ($badges[$service->id] ?? 'متوفر') }}
+                                </span>
                             </a>
                             <div class="ty-product-card__body">
                                 <h3>{{ $service->title }}</h3>
@@ -970,15 +996,23 @@
                                         <a class="ty-icon-btn" href="{{ route('service.show', ['id' => $service->seo_route_key]) }}" aria-label="عرض المنتج">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
-                                        <form action="{{ route('customer.cart_add') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="id" value="{{ encrypt($service->id) }}">
-                                            <button class="ty-buy-btn" type="submit">
-                                                <i class="fa-solid fa-cart-plus"></i>
-                                                <span class="tr-ar">أضف</span>
-                                                <span class="tr-en">Add</span>
+                                        @if (!$isSoldOut && $service->not_available != 1)
+                                            <form action="{{ route('customer.cart_add') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="id" value="{{ encrypt($service->id) }}">
+                                                <button class="ty-buy-btn" type="submit">
+                                                    <i class="fa-solid fa-cart-plus"></i>
+                                                    <span class="tr-ar">أضف</span>
+                                                    <span class="tr-en">Add</span>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button class="ty-buy-btn ty-buy-btn--disabled" type="button" disabled>
+                                                <i class="fa-solid fa-ban"></i>
+                                                <span class="tr-ar">غير متاح</span>
+                                                <span class="tr-en">Sold out</span>
                                             </button>
-                                        </form>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

@@ -70,7 +70,9 @@
                             <span>منتج مختار | Selected product</span>
                         </span>
                         <h3 class="fs-30 mb-0">{{ $service->title }}</h3>
-                        @if ($service->not_available != 1)
+                        @if ($service->is_sold_out)
+                            <p>نفدت كمية هذا المنتج حالياً، ويمكنك متابعة المنتجات الأخرى من المتجر.</p>
+                        @elseif ($service->not_available != 1)
                             <p>جاهز للطلب الآن مع خيارات مرنة للإضافات والتسليم.</p>
                         @else
                             <p>هذا المنتج غير متاح حالياً، ويمكنك متابعة المنتجات الأخرى من المتجر.</p>
@@ -115,7 +117,10 @@
                                     </div>
                                 </div>
                                 <div class="content store-product-detail-copy mb-30">
-                                    <div id="serviceCarousel" class="carousel slide store-product-gallery" data-bs-ride="carousel">
+                                    <div id="serviceCarousel" class="carousel slide store-product-gallery {{ $service->is_sold_out ? 'is-sold-out' : '' }}" data-bs-ride="carousel">
+                                        @if ($service->is_sold_out)
+                                            <span class="store-stock-badge store-stock-badge--detail">نفذت الكمية</span>
+                                        @endif
                                         <div class="carousel-inner">
                                             <div class="carousel-item active">
                                                 <img src="{{ $service->image_url }}" class="d-block w-100 rounded"
@@ -189,7 +194,7 @@
                 <div class="col-lg-4 order-1 order-lg-2">
                     <div class="courses-details__item-right">
                         <div class="item store-purchase-card">
-                            @if ($service->not_available != 1)
+                            @if ($service->not_available != 1 && !$service->is_sold_out)
                                 <form name="form_code" class="" action="{{ route('customer.cart_add') }}"
                                     method="POST">
                                     @csrf
@@ -216,7 +221,7 @@
                                 </form>
                             @else
                                 <br>
-                                <span class="notAvailable">غير متاح حالياً</span>
+                                <span class="notAvailable">{{ $service->is_sold_out ? 'نفذت الكمية' : 'غير متاح حالياً' }}</span>
                             @endif
                             <br>
                             <span class="price">
@@ -266,7 +271,7 @@
                 'url' => route('service.show', ['id' => $service->seo_route_key]),
                 'priceCurrency' => 'SAR',
                 'price' => number_format($schemaPrice, 2, '.', ''),
-                'availability' => $service->not_available == 1 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+                'availability' => ($service->not_available == 1 || $service->is_sold_out) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
                 'itemCondition' => 'https://schema.org/NewCondition',
             ],
         ];

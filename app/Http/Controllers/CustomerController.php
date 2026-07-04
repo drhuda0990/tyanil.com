@@ -498,6 +498,10 @@ class CustomerController extends Controller
                     $cart->delete();
                     continue;
                 }
+                if ($cart->service->is_sold_out) {
+                    $cart->delete();
+                    continue;
+                }
                 if (Service::servicePrice($cart->service_id) != $cart->amount) {
                     $cart->amount = Service::servicePrice($cart->service_id);
                     $cart->service_price = Service::servicePrice($cart->service_id);
@@ -578,7 +582,12 @@ class CustomerController extends Controller
 
     public function cart_apply_post(Request $request)
     {
-        $this->addToCart($request);
+        $result = $this->addToCart($request);
+
+        if ($result !== true) {
+            return redirect()->back()->with('message', $result);
+        }
+
         return redirect()->back()->with(
             'cartAdded',
             'تم الإضافة بنجاح'
@@ -590,11 +599,21 @@ class CustomerController extends Controller
         if (!$service) {
             abort(404);
         }
+        if (!$service->isPurchasable()) {
+            return $service->is_sold_out
+                ? 'نفذت كمية هذا المنتج حالياً'
+                : 'هذا المنتج غير متاح حالياً';
+        }
         $service_price = Service::servicePrice(decrypt($request->id));
         $amount = $service_price;
         //-------------------- Check Get Discount
         $ip = $_SERVER['REMOTE_ADDR'];
         $customer = Auth::guard('customer')->user();
+        $cartQuantity = $this->cartQuantityForService($service, $customer, $ip);
+
+        if (!$service->hasAvailableQuantity($cartQuantity + 1)) {
+            return 'الكمية المتاحة من المنتج "' . $service->title . '" هي ' . (int) $service->quantity;
+        }
         // if ($customer) {
         //     $cart   = Cart::where([['service_id', $service->id], ['customer_id', Auth::guard('customer')->id()]])->first();
         // } else {
@@ -616,6 +635,8 @@ class CustomerController extends Controller
         // $cart->how_know_us = $request->how_know_us;
         // $cart->note = $request->note;
         $cart->save();
+
+        return true;
     }
     public function code_id(Request $request)
     {
@@ -752,6 +773,9 @@ class CustomerController extends Controller
             $generalSettings = $this->generalSettings();
             $tapSecretAPIKey = $generalSettings->tapSectretKey;
             $carts = $this->cartItems();
+            if ($stockMessage = $this->cartStockMessage($carts)) {
+                return redirect()->route('customer.cart')->with('message', $stockMessage);
+            }
 
             $cartTotalPrice = $paymentService->cartTotalPrice($carts);
             $existShipment = $cartTotalPrice['existShipment'];
@@ -1304,6 +1328,45 @@ class CustomerController extends Controller
 
         return response()->download($filePath, $media->file_name);
     }
+
+    private function cartQuantityForService(Service $service, ?Customer $customer, string $ip): int
+    {
+        $query = Cart::where('service_id', $service->id);
+
+        if ($customer) {
+            $query->where('customer_id', $customer->id);
+        } else {
+            $query->where('user_ip', $ip)->whereNull('customer_id');
+        }
+
+        return $query->count();
+    }
+
+    private function cartStockMessage($carts): ?string
+    {
+        $requestedQuantities = [];
+
+        foreach ($carts as $cart) {
+            $service = $cart->service;
+
+            if (!$service || !$service->isPurchasable()) {
+                return 'توجد منتجات غير متاحة في السلة، فضلاً حدّث السلة ثم حاول مرة أخرى';
+            }
+
+            $requestedQuantities[$service->id] = ($requestedQuantities[$service->id] ?? 0) + 1;
+        }
+
+        foreach ($requestedQuantities as $serviceId => $requestedQuantity) {
+            $service = Service::find($serviceId);
+
+            if ($service && !$service->hasAvailableQuantity($requestedQuantity)) {
+                return 'الكمية المتاحة من المنتج "' . $service->title . '" هي ' . (int) $service->quantity;
+            }
+        }
+
+        return null;
+    }
+
     public function newPaymentRequest($data, $request, $amount, $carts, $discount_id, $payment)
     {
         $paymentRequest = new PaymentRequest();

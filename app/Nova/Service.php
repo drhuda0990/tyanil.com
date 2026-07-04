@@ -9,6 +9,7 @@ use Outl1ne\MultiselectField\Multiselect;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Heading;
 use Laravel\Nova\Fields\Select;
@@ -98,6 +99,13 @@ class Service extends Resource
                 ->hideFromIndex(),
             Text::make('السعر ', 'price_1')
                 ->rules('required'),
+            Number::make('الكمية', 'quantity')
+                ->min(0)
+                ->step(1)
+                ->default(1)
+                ->sortable()
+                ->help('إذا كانت الكمية 0 سيظهر فوق صورة المنتج تنبيه: نفذت الكمية، ويتوقف زر الإضافة للسلة.')
+                ->rules('required', 'integer', 'min:0'),
             // Text::make('السعر بعد', 'price_2'),
             Select::make('التقسيمة التابعه لها', 'service_category_id')
                 ->options(\App\ServiceCategory::where('activate', 1)

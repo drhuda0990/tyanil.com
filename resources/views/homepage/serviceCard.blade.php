@@ -1,6 +1,9 @@
 <div class="swiper-slide store-product-slide">
+    @php
+        $isSoldOut = $service->is_sold_out;
+    @endphp
     <div class="courses-two__item store-product-card">
-        <div class="courses-two__image image store-product-card__media">
+        <div class="courses-two__image image store-product-card__media {{ $isSoldOut ? 'is-sold-out' : '' }}">
             @if ($service->advertizment_service != 1)
                 <a href="{{ route('service.show', ['id' => $service->seo_route_key]) }}"> <img src="{{ $service->image_url }}"
                         alt="image">
@@ -8,6 +11,9 @@
             @else
                 <a href="{{ $service->redirect_url }}"> <img src="{{ $service->image_url }}" alt="image">
                 </a>
+            @endif
+            @if ($isSoldOut)
+                <span class="store-stock-badge">نفذت الكمية</span>
             @endif
             {{-- <span class="time">
                 <svg class="me-1" width="16" height="17" viewBox="0 0 16 17"
@@ -24,7 +30,7 @@
         </div>
         <div class="courses__content store-product-card__body pt-4 p-0">
             <div class="courses-two__info store-product-card__meta pb-4">
-                @if ($service->advertizment_service != 1 && $service->not_available != 1)
+                @if ($service->advertizment_service != 1 && $service->not_available != 1 && !$isSoldOut)
                     <form name="form_code" class="" action="{{ route('customer.cart_add') }}" method="POST">
                         @csrf
                         <input type="hidden" name="id" value="{{ encrypt($service->id) }}">
