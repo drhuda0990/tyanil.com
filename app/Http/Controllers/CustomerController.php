@@ -463,7 +463,7 @@ class CustomerController extends Controller
         $paymentService = new PaymentService();
 
         $customer = Auth::guard('customer')->user();
-        $cities = City::all();
+        $cities = City::orderBy('city_arName')->get();
         $checkoutAddress = null;
         $ip = $_SERVER['REMOTE_ADDR'];
         if ($customer) {
@@ -1141,7 +1141,7 @@ class CustomerController extends Controller
      */
     public function address($id)
     {
-        $cities = City::all();
+        $cities = City::orderBy('city_arName')->get();
         $address = CustomerAddress::find(decrypt($id));
         if (!$address) {
             abort(404);
@@ -1174,7 +1174,7 @@ class CustomerController extends Controller
     }
     public function newAddress()
     {
-        $cities = City::all();
+        $cities = City::orderBy('city_arName')->get();
 
         return view('customer.address', compact('cities'));
     }
