@@ -945,7 +945,7 @@
                                     <img src="{{ $service->image_url }}" alt="{{ $service->title }}">
                                     <span>
                                         <strong>{{ $service->title }}</strong>
-                                        {{ number_format($service->price_1) }} SAR
+                                        {{ $service->formatted_price }} SAR
                                     </span>
                                 </a>
                             @endforeach
@@ -991,7 +991,7 @@
                                 <h3>{{ $service->title }}</h3>
                                 <p>{{ \Illuminate\Support\Str::limit($summary, 116) }}</p>
                                 <div class="ty-product-card__footer">
-                                    <span class="ty-price">{{ number_format($service->price_1) }} SAR</span>
+                                    <span class="ty-price">{{ $service->formatted_price }} SAR</span>
                                     <div class="ty-card-actions">
                                         <a class="ty-icon-btn" href="{{ route('service.show', ['id' => $service->seo_route_key]) }}" aria-label="عرض المنتج">
                                             <i class="fa-solid fa-eye"></i>

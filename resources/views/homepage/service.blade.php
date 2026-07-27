@@ -84,7 +84,7 @@
                         @else
                             <span>السعر</span>
                         @endif
-                        <strong>{{ number_format($service->price_1) }} SAR</strong>
+                        <strong>{{ $service->formatted_price }} SAR</strong>
                     </div>
 
                 </div>
@@ -228,7 +228,7 @@
                                 @if ($service->price_start_from)
                                     تبدأ من
                                 @endif
-                                {{ number_format($service->price_1) }} SAR
+                                {{ $service->formatted_price }} SAR
                             </span>
                             <br>
                             <button onclick="copyShareText()" type="button" class="btn-one btn-one2"><i
@@ -254,7 +254,7 @@
     @php
         $schemaImage = \Illuminate\Support\Str::startsWith($service->image_url, ['http://', 'https://']) ? $service->image_url : url($service->image_url);
         $schemaDescription = $service->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($service->summry ?: $service->body)), 155, '');
-        $schemaPrice = (float) preg_replace('/[^\d.]/', '', (string) $service->price_1);
+        $schemaPrice = $service->numeric_price;
         $productSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'Product',

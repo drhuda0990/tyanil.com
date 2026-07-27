@@ -49,7 +49,7 @@
                     @if ($service->price_start_from)
                         تبدأ من
                     @endif
-                    {{ number_format($service->price_1) }} SAR
+                    {{ $service->formatted_price }} SAR
                 </h4>
             </div>
             <h3>
