@@ -29,24 +29,73 @@
             position: relative;
             min-height: min(760px, calc(100vh - 86px));
             padding: 44px 0 62px;
+            overflow: hidden;
             background:
                 linear-gradient(90deg, rgba(75, 33, 63, .045) 1px, transparent 1px),
                 linear-gradient(180deg, rgba(75, 33, 63, .04) 1px, transparent 1px);
             background-size: 46px 46px;
         }
 
+        .ty-hero__video {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            opacity: .36;
+            pointer-events: none;
+        }
+
+        .ty-hero__video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: saturate(.78) contrast(1.08) brightness(1.04);
+        }
+
         .ty-hero::before {
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(110deg, rgba(255, 255, 255, .62), transparent 44%, rgba(255, 255, 255, .34));
+            z-index: 1;
+            background:
+                linear-gradient(110deg, rgba(255, 244, 239, .92), rgba(255, 244, 239, .72) 42%, rgba(255, 255, 255, .44)),
+                linear-gradient(90deg, rgba(75, 33, 63, .045) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(75, 33, 63, .04) 1px, transparent 1px);
+            background-size: auto, 46px 46px, 46px 46px;
             pointer-events: none;
         }
 
-        .ty-hero > .container,
+        .ty-hero > .container {
+            position: relative;
+            z-index: 2;
+        }
+
         .ty-section > .container {
             position: relative;
             z-index: 1;
+        }
+
+        .ty-hero__credit {
+            position: absolute;
+            left: 18px;
+            bottom: 18px;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 5px 10px;
+            border: 1px solid rgba(255, 255, 255, .62);
+            border-radius: 999px;
+            color: rgba(75, 33, 63, .72);
+            background: rgba(255, 255, 255, .50);
+            box-shadow: 0 14px 30px rgba(75, 33, 63, .08);
+            backdrop-filter: blur(12px);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .ty-hero__credit:hover {
+            color: var(--ty-plum);
+            background: rgba(255, 255, 255, .72);
         }
 
         .ty-hero__grid {
@@ -307,8 +356,8 @@
 
         .ty-products-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 18px;
         }
 
         .ty-product-card {
@@ -378,22 +427,22 @@
         }
 
         .ty-product-card__body {
-            padding: 20px;
+            padding: 16px;
         }
 
         .ty-product-card h3 {
             color: var(--ty-plum);
-            font-size: 21px;
+            font-size: 18px;
             line-height: 1.35;
             font-weight: 900;
         }
 
         .ty-product-card p {
-            min-height: 78px;
+            min-height: 70px;
             margin-top: 10px;
             color: var(--ty-muted);
-            font-size: 15px;
-            line-height: 1.7;
+            font-size: 14px;
+            line-height: 1.62;
         }
 
         .ty-product-card__footer {
@@ -406,7 +455,7 @@
 
         .ty-price {
             color: var(--ty-plum);
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 900;
             white-space: nowrap;
         }
@@ -440,8 +489,8 @@
         }
 
         .ty-buy-btn {
-            min-width: 94px;
-            padding: 0 14px;
+            min-width: 86px;
+            padding: 0 12px;
             color: var(--ty-ivory);
             background: var(--ty-rose);
         }
@@ -623,10 +672,13 @@
 
         @media (max-width: 1199px) {
             .ty-hero__grid,
-            .ty-products-grid,
             .ty-benefits,
             .ty-categories {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .ty-products-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
             .ty-hero__visual {
@@ -645,6 +697,18 @@
                 order: 1;
                 min-height: auto;
                 padding: 28px 0 38px;
+            }
+
+            .ty-hero__video {
+                opacity: .24;
+            }
+
+            .ty-hero__credit {
+                right: 14px;
+                bottom: 10px;
+                left: auto;
+                max-width: calc(100% - 28px);
+                font-size: 10px;
             }
 
             .ty-hero__grid,
@@ -869,12 +933,18 @@
                 padding: 0 10px;
             }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ty-hero__video video {
+                display: none;
+            }
+        }
     </style>
 @endsection
 
 @section('content')
     @php
-        $featuredServices = $services->take(9)->values();
+        $featuredServices = $services->take(20)->values();
         $featuredCategories = $mainCategories->sortBy('order_num')->take(6)->values();
         $badges = [
             1 => 'حرفة يدوية',
@@ -888,6 +958,18 @@
 
     <div class="ty-home">
         <section class="ty-hero">
+            <div class="ty-hero__video" aria-hidden="true">
+                <video autoplay muted loop playsinline preload="metadata"
+                    poster="{{ asset('storage/tyaniel/video/tyaniel-hero-crochet-poster.jpg') }}?v=crochet-closeup-20260802">
+                    <source src="{{ asset('storage/tyaniel/video/tyaniel-hero-crochet.mp4') }}?v=crochet-closeup-20260802"
+                        type="video/mp4">
+                </video>
+            </div>
+            <a class="ty-hero__credit"
+                href="https://commons.wikimedia.org/wiki/File:Crocheting_(close-up).webm" target="_blank"
+                rel="noopener">
+                <span>Video: Clement Bucco-Lechat / CC BY-SA 3.0</span>
+            </a>
             <div class="container">
                 <div class="ty-hero__grid">
                     <div class="ty-hero__content">
