@@ -74,30 +74,6 @@
             z-index: 1;
         }
 
-        .ty-hero__credit {
-            position: absolute;
-            left: 18px;
-            bottom: 18px;
-            z-index: 2;
-            display: inline-flex;
-            align-items: center;
-            min-height: 28px;
-            padding: 5px 10px;
-            border: 1px solid rgba(255, 255, 255, .62);
-            border-radius: 999px;
-            color: rgba(75, 33, 63, .72);
-            background: rgba(255, 255, 255, .50);
-            box-shadow: 0 14px 30px rgba(75, 33, 63, .08);
-            backdrop-filter: blur(12px);
-            font-size: 11px;
-            font-weight: 800;
-        }
-
-        .ty-hero__credit:hover {
-            color: var(--ty-plum);
-            background: rgba(255, 255, 255, .72);
-        }
-
         .ty-hero__grid {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr);
@@ -703,14 +679,6 @@
                 opacity: .24;
             }
 
-            .ty-hero__credit {
-                right: 14px;
-                bottom: 10px;
-                left: auto;
-                max-width: calc(100% - 28px);
-                font-size: 10px;
-            }
-
             .ty-hero__grid,
             .ty-products-grid,
             .ty-benefits {
@@ -965,11 +933,6 @@
                         type="video/mp4">
                 </video>
             </div>
-            <a class="ty-hero__credit"
-                href="https://commons.wikimedia.org/wiki/File:Crocheting_(close-up).webm" target="_blank"
-                rel="noopener">
-                <span>Video: Clement Bucco-Lechat / CC BY-SA 3.0</span>
-            </a>
             <div class="container">
                 <div class="ty-hero__grid">
                     <div class="ty-hero__content">
