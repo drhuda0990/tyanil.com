@@ -35,7 +35,7 @@ class TyanielProductsAndSaudiCitiesSeeder extends Seeder
                 [
                     'title' => $product['title'],
                     'summry' => $summary,
-                    'price_1' => (string) $product['price'],
+                    'price_1' => (string) max(0, ((int) $product['price']) - 75),
                     'price_2' => null,
                     'body' => $body,
                     'tags' => $product['tags'],

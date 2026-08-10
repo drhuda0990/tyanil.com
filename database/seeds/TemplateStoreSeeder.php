@@ -558,7 +558,7 @@ HTML;
                     'title' => $service['title'],
                     'image' => $service['image'],
                     'summry' => '<p>' . $service['summry'] . '</p>',
-                    'price_1' => $service['price_1'],
+                    'price_1' => (string) max(0, (float) $service['price_1'] - 75),
                     'price_2' => null,
                     'body' => $service['body'],
                     'tags' => $service['tags'],
