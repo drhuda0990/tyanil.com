@@ -37,4 +37,12 @@ return [
         'secret_key' => env('MOYASAR_SECRET_KEY'),
     ],
 
+    'tamara' => [
+        'enabled' => env('TAMARA_PAYMENT_ENABLED', false),
+        'api_url' => env('TAMARA_API_URL', 'https://api.tamara.co'),
+        'token' => env('TAMARA_TOKEN'),
+        'notification_token' => env('TAMARA_NOTIFICATION_TOKEN'),
+        'public_key' => env('TAMARA_PUBLIC_KEY'),
+    ],
+
 ];

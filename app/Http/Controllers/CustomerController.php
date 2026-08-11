@@ -29,6 +29,7 @@ use App\Support\InternalNotificationService;
 use App\Support\StoreSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Session;
 use Salla\ZATCA\GenerateQrCode;
 use Salla\ZATCA\Tags\InvoiceDate;
@@ -519,7 +520,10 @@ class CustomerController extends Controller
         $shipmentPrice = $cartTotalPrice['shipment_price'];
         $totalPrice = $cartTotalPrice['total_price'];
         $existShipment = $cartTotalPrice['existShipment'];
-        return view('customer.cart', compact('carts', 'itemsTotal', 'shipmentPrice', 'totalPrice', 'existShipment', 'cities', 'checkoutAddress'));
+        $paymentOptions = $this->availableCheckoutPaymentOptions($this->generalSettings());
+        $defaultPaymentMethod = array_key_first($paymentOptions);
+
+        return view('customer.cart', compact('carts', 'itemsTotal', 'shipmentPrice', 'totalPrice', 'existShipment', 'cities', 'checkoutAddress', 'paymentOptions', 'defaultPaymentMethod'));
     }
     public function cartRemove($id)
     {
@@ -791,6 +795,7 @@ class CustomerController extends Controller
             $shipment_price = 0;
             // dd($tapSecretAPIKey);
             $discount_id = $request->discount_id;
+            $discountModel = null;
             $cid = $customer->id . rand(10, 100);
             $amount = 0;
             $shipment_price_saved = 0;
@@ -812,6 +817,7 @@ class CustomerController extends Controller
             $amount = $cartTotalPrice['total_price'];
             if ($discount_id) {
                 $discount_id = decrypt($discount_id);
+                $discountModel = Discount::find($discount_id);
                 $get_discount = $this->get_discount($discount_id, 1);
                 // dd($get_discount);
                 $amount = $get_discount['discount_amount'];
@@ -836,7 +842,21 @@ class CustomerController extends Controller
 
 
             $amount = number_format((float)$amount, 2, '.', '');
-            if ($this->moyasarPaymentIsReady($generalSettings)) {
+            $paymentMethod = $this->resolveCheckoutPaymentMethod($request, $generalSettings);
+
+            if ($paymentMethod === 'tamara') {
+                $tamaraCheckout = $this->startTamaraCheckout($request, $customer, $carts, $cartTotalPrice, (float) $amount, $discountModel);
+
+                if (! $tamaraCheckout['success']) {
+                    return redirect()->route('customer.cart')
+                        ->withInput()
+                        ->with('message', $tamaraCheckout['message']);
+                }
+
+                return redirect($tamaraCheckout['payment_url']);
+            }
+
+            if ($paymentMethod === 'moyasar' && $this->moyasarPaymentIsReady($generalSettings)) {
                 $moyasarPayment = $this->localPaymentData((float) $amount, 'INITIATED');
                 $paymentRequest = $this->newPaymentRequest($moyasarPayment, $request, $amount, $carts, $discount_id, 'moyasar');
                 $paymentRequest->payment_url = route('moyasar.form', ['paymentRequest' => $paymentRequest->id]);
@@ -1117,6 +1137,609 @@ class CustomerController extends Controller
         }
 
         return ['data' => $data, 'error' => null];
+    }
+
+    private function availableCheckoutPaymentOptions($generalSettings): array
+    {
+        $options = [];
+
+        if ($this->moyasarPaymentIsReady($generalSettings)) {
+            $options['moyasar'] = [
+                'title' => 'بطاقة بنكية / Apple Pay',
+                'description' => 'مدى، فيزا، ماستركارد و Apple Pay عبر بوابة الدفع الحالية.',
+                'icon' => 'fa-solid fa-credit-card',
+            ];
+        }
+
+        if ($this->tamaraPaymentIsReady($generalSettings)) {
+            $options['tamara'] = [
+                'title' => 'تمارا',
+                'description' => 'ادفعي الآن أو قسمي مشترياتك حسب الخيارات المتاحة لك من تمارا.',
+                'icon' => 'fa-solid fa-wallet',
+            ];
+        }
+
+        return $options;
+    }
+
+    private function resolveCheckoutPaymentMethod(Request $request, $generalSettings): string
+    {
+        $requested = (string) $request->input('payment_method', '');
+
+        if ($requested === 'tamara' && $this->tamaraPaymentIsReady($generalSettings)) {
+            return 'tamara';
+        }
+
+        if ($requested === 'moyasar' && $this->moyasarPaymentIsReady($generalSettings)) {
+            return 'moyasar';
+        }
+
+        if ($this->moyasarPaymentIsReady($generalSettings)) {
+            return 'moyasar';
+        }
+
+        if ($this->tamaraPaymentIsReady($generalSettings)) {
+            return 'tamara';
+        }
+
+        return 'tap';
+    }
+
+    private function tamaraPaymentIsReady($generalSettings): bool
+    {
+        $settings = $this->tamaraSettings($generalSettings);
+
+        return $settings['enabled'] && ! empty($settings['api_url']) && ! empty($settings['token']);
+    }
+
+    private function tamaraSettings($generalSettings): array
+    {
+        $enabled = $generalSettings->tamaraPaymentActivate;
+
+        if ($enabled === null) {
+            $enabled = config('services.tamara.enabled');
+        }
+
+        return [
+            'enabled' => filter_var($enabled, FILTER_VALIDATE_BOOLEAN),
+            'api_url' => rtrim((string) ($generalSettings->tamaraApiUrl ?: config('services.tamara.api_url', 'https://api.tamara.co')), '/'),
+            'token' => $generalSettings->tamaraToken ?: config('services.tamara.token'),
+            'notification_token' => $generalSettings->tamaraNotificationToken ?: config('services.tamara.notification_token'),
+            'public_key' => $generalSettings->tamaraPublicKey ?: config('services.tamara.public_key'),
+        ];
+    }
+
+    private function startTamaraCheckout(Request $request, Customer $customer, $carts, array $cartTotalPrice, float $amount, ?Discount $discountModel): array
+    {
+        $settings = $this->tamaraSettings($this->generalSettings());
+        $address = $request->address
+            ? CustomerAddress::where('customer_id', $customer->id)->where('id', $request->address)->first()
+            : null;
+
+        $eligibility = $this->checkTamaraEligibility($settings, $customer, $address, $amount);
+
+        if (! $eligibility['eligible']) {
+            Log::info('Tamara eligibility rejected checkout', [
+                'customer_id' => $customer->id,
+                'amount' => $amount,
+                'response' => $eligibility['response'] ?? null,
+                'error' => $eligibility['error'] ?? null,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'تمارا غير متاحة لهذا الطلب حالياً. يمكنك اختيار بطاقة بنكية أو Apple Pay لإكمال الدفع.',
+            ];
+        }
+
+        $draftPayment = $this->localPaymentData($amount, 'INITIATED');
+        $paymentRequest = $this->newPaymentRequest($draftPayment, $request, number_format($amount, 2, '.', ''), $carts, $request->discount_id ? decrypt($request->discount_id) : null, 'tamara');
+        $payload = $this->tamaraCheckoutPayload($paymentRequest, $customer, $address, $carts, $cartTotalPrice, $amount, $discountModel);
+        $checkout = $this->tamaraApiRequest($settings, 'POST', '/checkout', $payload);
+
+        if ($checkout['error'] || empty($checkout['data']['checkout_url']) || empty($checkout['data']['order_id'])) {
+            Log::warning('Tamara checkout creation failed', [
+                'payment_request_id' => $paymentRequest->id,
+                'status_code' => $checkout['status_code'] ?? null,
+                'error' => $checkout['error'],
+                'response' => $checkout['data'],
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'تعذر إنشاء عملية الدفع عبر تمارا حالياً. فضلاً جرّبي طريقة دفع أخرى.',
+            ];
+        }
+
+        $tamaraData = (object) [
+            'id' => $checkout['data']['order_id'],
+            'order_id' => $checkout['data']['order_id'],
+            'checkout_id' => $checkout['data']['checkout_id'] ?? null,
+            'status' => $checkout['data']['status'] ?? 'new',
+            'amount' => $amount,
+            'transaction' => (object) [
+                'url' => $checkout['data']['checkout_url'],
+            ],
+        ];
+
+        $paymentRequest->payment_id = $tamaraData->order_id;
+        $paymentRequest->payment_url = $tamaraData->transaction->url;
+        $paymentRequest->request = json_encode($payload);
+        $paymentRequest->response = json_encode($checkout['data']);
+        $paymentRequest->status = $tamaraData->status;
+        $paymentRequest->save();
+
+        return [
+            'success' => true,
+            'payment_url' => $tamaraData->transaction->url,
+        ];
+    }
+
+    private function checkTamaraEligibility(array $settings, Customer $customer, ?CustomerAddress $address, float $amount): array
+    {
+        $payload = [
+            'country' => 'SA',
+            'order_value' => $this->tamaraMoney($amount),
+            'phone_number' => $this->tamaraPhone($address->phone ?? $customer->phone ?? ''),
+            'is_vip' => false,
+        ];
+
+        $result = $this->tamaraApiRequest($settings, 'POST', '/checkout/payment-options-pre-check', $payload);
+        $data = $result['data'];
+
+        if ($result['error'] || ! is_array($data)) {
+            return [
+                'eligible' => false,
+                'error' => $result['error'],
+                'response' => $data,
+            ];
+        }
+
+        $explicitFalse = array_key_exists('has_available_payment_options', $data)
+            && filter_var($data['has_available_payment_options'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) === false;
+
+        $availableCollections = [
+            $data['available_payment_options'] ?? null,
+            $data['available_payment_labels'] ?? null,
+            $data['payment_options'] ?? null,
+        ];
+
+        $hasAvailableOption = filter_var($data['has_available_payment_options'] ?? null, FILTER_VALIDATE_BOOLEAN)
+            || collect($availableCollections)->contains(fn ($value) => is_array($value) && count($value) > 0);
+
+        return [
+            'eligible' => $hasAvailableOption && ! $explicitFalse,
+            'error' => null,
+            'response' => $data,
+        ];
+    }
+
+    private function tamaraCheckoutPayload(PaymentRequest $paymentRequest, Customer $customer, ?CustomerAddress $address, $carts, array $cartTotalPrice, float $amount, ?Discount $discountModel): array
+    {
+        [$firstName, $lastName] = $this->tamaraCustomerName($address->name ?? $customer->name ?? 'Tyaniel Customer');
+        $shippingAmount = (float) ($cartTotalPrice['shipment_price'] ?? 0);
+        $items = [];
+
+        foreach ($carts as $cart) {
+            if (! $cart->service) {
+                continue;
+            }
+
+            $items[] = [
+                'reference_id' => (string) $cart->service->id,
+                'type' => 'physical',
+                'name' => Str::limit($cart->service->title, 120, ''),
+                'sku' => 'TY-' . $cart->service->id,
+                'quantity' => 1,
+                'unit_price' => $this->tamaraMoney((float) $cart->amount),
+                'tax_amount' => $this->tamaraMoney(0),
+                'total_amount' => $this->tamaraMoney((float) $cart->amount),
+                'image_url' => $this->absoluteUrl($cart->service->image_url),
+            ];
+        }
+
+        if (($cartTotalPrice['additional_feature_price'] ?? 0) > 0) {
+            $items[] = [
+                'reference_id' => 'additional-features-' . $paymentRequest->id,
+                'type' => 'physical',
+                'name' => 'إضافات المنتجات',
+                'sku' => 'TY-ADD-' . $paymentRequest->id,
+                'quantity' => 1,
+                'unit_price' => $this->tamaraMoney((float) $cartTotalPrice['additional_feature_price']),
+                'tax_amount' => $this->tamaraMoney(0),
+                'total_amount' => $this->tamaraMoney((float) $cartTotalPrice['additional_feature_price']),
+            ];
+        }
+
+        $addressData = [
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'line1' => (string) ($address->address ?? 'Tyaniel order'),
+            'line2' => (string) ($address->street ?? ''),
+            'region' => (string) ($address->street ?? ''),
+            'city' => (string) ($address->city_id ?? 'Riyadh'),
+            'country_code' => 'SA',
+            'phone_number' => $this->tamaraPhone($address->phone ?? $customer->phone ?? ''),
+        ];
+
+        $payload = [
+            'order_reference_id' => 'TY-' . $paymentRequest->id,
+            'order_number' => 'TY-' . $paymentRequest->id,
+            'total_amount' => $this->tamaraMoney($amount),
+            'description' => 'طلب من متجر تيانيل',
+            'country_code' => 'SA',
+            'payment_type' => 'PAY_BY_INSTALMENTS',
+            'locale' => app()->getLocale() === 'en' ? 'en_US' : 'ar_SA',
+            'items' => $items,
+            'consumer' => [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'phone_number' => $this->tamaraPhone($address->phone ?? $customer->phone ?? ''),
+                'email' => $address->email ?? $customer->email ?? null,
+            ],
+            'billing_address' => $addressData,
+            'shipping_address' => $addressData,
+            'tax_amount' => $this->tamaraMoney(0),
+            'shipping_amount' => $this->tamaraMoney($shippingAmount),
+            'merchant_url' => [
+                'success' => $this->absoluteRoute('tamara.callback', ['paymentRequest' => $paymentRequest->id, 'result' => 'success']),
+                'failure' => $this->absoluteRoute('tamara.callback', ['paymentRequest' => $paymentRequest->id, 'result' => 'failure']),
+                'cancel' => $this->absoluteRoute('tamara.callback', ['paymentRequest' => $paymentRequest->id, 'result' => 'cancel']),
+                'notification' => $this->tamaraWebhookUrl(),
+            ],
+            'platform' => 'tyanil-laravel',
+            'is_mobile' => request()->header('Sec-CH-UA-Mobile') === '?1',
+            'expires_in_minutes' => 60,
+        ];
+
+        if ($discountModel) {
+            $cartTotal = (float) ($cartTotalPrice['total_price'] ?? $amount);
+            $discountAmount = max(0, $cartTotal - $amount);
+            if ($discountAmount > 0) {
+                $payload['discount'] = [
+                    'name' => $discountModel->code ?: 'Tyaniel discount',
+                    'amount' => $this->tamaraMoney($discountAmount),
+                ];
+            }
+        }
+
+        return $payload;
+    }
+
+    public function tamaraCallback(Request $request, PaymentRequest $paymentRequest, string $result)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if ($paymentRequest->payment_type !== 'tamara') {
+            abort(404);
+        }
+
+        if ($customer && (int) $paymentRequest->customer_id !== (int) $customer->id) {
+            abort(404);
+        }
+
+        if ($result !== 'success') {
+            $paymentRequest->status = strtoupper($result);
+            $paymentRequest->response = json_encode($request->all());
+            $paymentRequest->save();
+
+            return redirect()->route('customer.cart')->with('message', 'لم تكتمل عملية الدفع عبر تمارا');
+        }
+
+        $orderId = $this->tamaraOrderIdFromPayload($request->all()) ?: $paymentRequest->payment_id;
+
+        if (! $orderId) {
+            return redirect()->route('customer.cart')->with('message', 'لم تصل بيانات عملية تمارا بشكل صحيح');
+        }
+
+        if (ServiceInvoice::where('refrence_id', $orderId)->exists()) {
+            return redirect()->route($customer ? 'customer.dashboard' : 'customer.login')->with('message', 'تم إستكمال الدفع بنجاح');
+        }
+
+        $settings = $this->tamaraSettings($this->generalSettings());
+        $lookup = $this->fetchTamaraOrder($settings, $orderId);
+
+        if ($lookup['error'] || ! $this->isTamaraSuccessStatus($this->tamaraStatusFromData($lookup['data']))) {
+            Log::warning('Tamara callback verification failed', [
+                'payment_request_id' => $paymentRequest->id,
+                'order_id' => $orderId,
+                'error' => $lookup['error'],
+                'response' => $lookup['data'],
+            ]);
+
+            return redirect()->route('customer.cart')->with('message', 'تعذر التحقق من عملية الدفع عبر تمارا');
+        }
+
+        $this->completeTamaraPayment($paymentRequest, $orderId, $lookup['data']);
+
+        return redirect()->route($customer ? 'customer.dashboard' : 'customer.login')->with('message', 'تم إستكمال الدفع بنجاح');
+    }
+
+    public function tamaraWebhook(Request $request)
+    {
+        $settings = $this->tamaraSettings($this->generalSettings());
+
+        if (! $this->validTamaraWebhookToken($request, $settings)) {
+            Log::warning('Tamara webhook rejected: invalid token');
+
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $payload = $request->all();
+        $orderId = $this->tamaraOrderIdFromPayload($payload);
+
+        if (! $orderId) {
+            return response()->json(['message' => 'Missing order id'], 422);
+        }
+
+        $paymentRequest = PaymentRequest::where('payment_type', 'tamara')
+            ->where('payment_id', $orderId)
+            ->latest()
+            ->first();
+
+        if (! $paymentRequest) {
+            return response()->json(['message' => 'Payment request not found'], 404);
+        }
+
+        $status = $this->tamaraStatusFromData($payload);
+
+        if ($this->isTamaraSuccessStatus($status)) {
+            $this->completeTamaraPayment($paymentRequest, $orderId, $payload);
+        } else {
+            $paymentRequest->status = strtoupper($status ?: 'WEBHOOK');
+            $paymentRequest->response = json_encode($payload);
+            $paymentRequest->save();
+        }
+
+        return response()->json(['message' => 'ok']);
+    }
+
+    private function completeTamaraPayment(PaymentRequest $paymentRequest, string $orderId, array $data): void
+    {
+        if (ServiceInvoice::where('refrence_id', $orderId)->exists()) {
+            return;
+        }
+
+        $paymentResponse = PaymentResponse::firstOrNew([
+            'payment_id' => $orderId,
+            'payment_type' => 'tamara',
+        ]);
+
+        if (! $paymentResponse->exists) {
+            $newPaymentResponse = collect($paymentRequest->toArray())
+                ->except(['id', 'created_at', 'updated_at', 'cart_items', 'check_num'])
+                ->toArray();
+
+            $paymentResponse->forceFill($newPaymentResponse);
+        }
+
+        $status = $this->tamaraStatusFromData($data) ?: 'approved';
+        $paymentResponse->response = json_encode($data);
+        $paymentResponse->status = strtoupper($status);
+        $paymentResponse->customer_id = $paymentRequest->customer_id;
+        $paymentResponse->save();
+
+        $paymentRequest->status = strtoupper($status);
+        $paymentRequest->response = json_encode($data);
+        $paymentRequest->save();
+
+        $orderData = json_decode(json_encode($data));
+        $orderData->amount = (float) $paymentRequest->amount;
+
+        $paymentDefinition = General::get_definition_id('electric_payment') ?: 0;
+        $paymentService = new PaymentService();
+        $paymentService->customerServiceOrder($paymentRequest, $orderId, $orderData, $paymentDefinition);
+    }
+
+    private function fetchTamaraOrder(array $settings, string $orderId): array
+    {
+        return $this->tamaraApiRequest($settings, 'GET', '/orders/' . rawurlencode($orderId));
+    }
+
+    private function tamaraApiRequest(array $settings, string $method, string $path, ?array $payload = null): array
+    {
+        $curl = curl_init();
+
+        $headers = [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $settings['token'],
+        ];
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $settings['api_url'] . $path,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 35,
+            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_HTTPHEADER => $headers,
+        ]);
+
+        if ($payload !== null) {
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload));
+        }
+
+        $response = curl_exec($curl);
+        $error = curl_error($curl);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        $data = json_decode((string) $response, true);
+
+        if ($error) {
+            return ['data' => $data, 'error' => $error, 'status_code' => $statusCode];
+        }
+
+        if ($statusCode >= 400 || ! is_array($data)) {
+            return ['data' => $data, 'error' => $response ?: 'Invalid Tamara response', 'status_code' => $statusCode];
+        }
+
+        return ['data' => $data, 'error' => null, 'status_code' => $statusCode];
+    }
+
+    private function tamaraOrderIdFromPayload(array $payload): ?string
+    {
+        $paths = [
+            ['order_id'],
+            ['orderId'],
+            ['id'],
+            ['data', 'order_id'],
+            ['data', 'orderId'],
+            ['order', 'order_id'],
+            ['order', 'orderId'],
+            ['event', 'order_id'],
+            ['event', 'orderId'],
+        ];
+
+        foreach ($paths as $path) {
+            $value = $payload;
+
+            foreach ($path as $segment) {
+                if (! is_array($value) || ! array_key_exists($segment, $value)) {
+                    $value = null;
+                    break;
+                }
+
+                $value = $value[$segment];
+            }
+
+            if (is_scalar($value) && (string) $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function tamaraStatusFromData(?array $data): string
+    {
+        if (! is_array($data)) {
+            return '';
+        }
+
+        $candidates = [
+            $data['status'] ?? null,
+            $data['order_status'] ?? null,
+            $data['payment_status'] ?? null,
+            $data['event_type'] ?? null,
+            $data['event'] ?? null,
+            $data['data']['status'] ?? null,
+            $data['data']['order_status'] ?? null,
+            $data['order']['status'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_scalar($candidate) && (string) $candidate !== '') {
+                return strtolower((string) $candidate);
+            }
+        }
+
+        return '';
+    }
+
+    private function isTamaraSuccessStatus(string $status): bool
+    {
+        return Str::contains(strtolower($status), [
+            'approved',
+            'authorised',
+            'authorized',
+            'captured',
+            'fully_captured',
+        ]);
+    }
+
+    private function validTamaraWebhookToken(Request $request, array $settings): bool
+    {
+        $expected = (string) ($settings['notification_token'] ?? '');
+        $provided = (string) $request->query('tamaraToken', '');
+
+        if ($expected === '' || $provided === '') {
+            return false;
+        }
+
+        if (hash_equals($expected, $provided)) {
+            return true;
+        }
+
+        try {
+            JWT::decode($provided, $expected, ['HS256']);
+
+            return true;
+        } catch (\Throwable $exception) {
+            return false;
+        }
+    }
+
+    private function tamaraMoney(float $amount): array
+    {
+        return [
+            'amount' => round($amount, 2),
+            'currency' => 'SAR',
+        ];
+    }
+
+    private function tamaraPhone(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?: '';
+
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        if (str_starts_with($digits, '966')) {
+            return '+' . $digits;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            return '+966' . substr($digits, 1);
+        }
+
+        if (strlen($digits) === 9 && str_starts_with($digits, '5')) {
+            return '+966' . $digits;
+        }
+
+        return $digits ? '+' . $digits : '+966500000000';
+    }
+
+    private function tamaraCustomerName(string $name): array
+    {
+        $parts = preg_split('/\s+/', trim($name), 2);
+        $firstName = $parts[0] ?: 'Tyaniel';
+        $lastName = $parts[1] ?? $firstName;
+
+        return [$firstName, $lastName];
+    }
+
+    private function tamaraWebhookUrl(): string
+    {
+        $settings = $this->tamaraSettings($this->generalSettings());
+        $token = $settings['notification_token'];
+        $url = $this->absoluteRoute('tamara.webhook');
+
+        return $token ? $url . '?tamaraToken=' . rawurlencode($token) : $url;
+    }
+
+    private function absoluteRoute(string $name, array $parameters = []): string
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        if ($appUrl && ! str_contains($appUrl, '127.0.0.1') && ! str_contains($appUrl, 'localhost')) {
+            return $appUrl . route($name, $parameters, false);
+        }
+
+        return route($name, $parameters);
+    }
+
+    private function absoluteUrl(?string $url): ?string
+    {
+        if (! $url) {
+            return null;
+        }
+
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+            return $url;
+        }
+
+        return rtrim((string) config('app.url'), '/') . '/' . ltrim($url, '/');
     }
 
     private function localPaymentData(float $amount, string $status): object

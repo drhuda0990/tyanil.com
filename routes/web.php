@@ -82,6 +82,8 @@ Route::middleware('auth.customer')->group(function () use ($customerController) 
   Route::get('/payment/moyasar/{paymentRequest}', $customerController . '@moyasarForm')->name('moyasar.form');
   Route::get('/payment/moyasar/callback/{paymentRequest}', $customerController . '@moyasarCallback')->name('moyasar.callback');
 });
+Route::get('/payment/tamara/callback/{paymentRequest}/{result}', $customerController . '@tamaraCallback')->name('tamara.callback');
+Route::post('/payment/tamara/webhook', $customerController . '@tamaraWebhook')->name('tamara.webhook')->middleware('throttle:60,1');
 Route::post('/logout',  "CustomerController@logout")->name('customer.logout');
 Route::post('/login',  "CustomerController@loginPost")->name('customer.login.post')->middleware('throttle:10,1');
 Route::post('/login/code',  "CustomerController@loginCode")->name('customer.login.access_code')->middleware('throttle:10,1');

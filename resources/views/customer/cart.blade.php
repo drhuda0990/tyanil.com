@@ -70,6 +70,78 @@
             line-height: 1.8;
         }
 
+        .ty-payment-methods {
+            margin-bottom: 20px;
+        }
+
+        .ty-payment-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .ty-payment-option {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-height: 92px;
+            padding: 18px;
+            border: 1px solid rgba(75, 33, 63, .16);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .72);
+            color: #4B213F;
+            cursor: pointer;
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .ty-payment-option:hover {
+            border-color: rgba(217, 137, 163, .68);
+            box-shadow: 0 14px 34px rgba(75, 33, 63, .10);
+            transform: translateY(-2px);
+        }
+
+        .ty-payment-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ty-payment-option__icon {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 48px;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #4B213F, #D989A3);
+            color: #fff;
+        }
+
+        .ty-payment-option__copy strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .ty-payment-option__copy span {
+            display: block;
+            color: #7b6574;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .ty-payment-option input:checked + .ty-payment-option__icon {
+            box-shadow: 0 0 0 5px rgba(217, 137, 163, .18);
+        }
+
+        .ty-payment-option:has(input:checked) {
+            border-color: rgba(75, 33, 63, .42);
+            background: linear-gradient(145deg, rgba(255, 255, 255, .96), rgba(255, 244, 239, .94));
+        }
+
         .ty-checkout-login {
             display: flex;
             align-items: center;
@@ -90,6 +162,10 @@
             .ty-checkout-card__head {
                 align-items: flex-start;
                 flex-direction: column;
+            }
+
+            .ty-payment-options {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -211,6 +287,33 @@
                     method="POST">
                     @csrf
                     <div id="discount_id_input"></div>
+
+                    @if (!empty($paymentOptions))
+                        <section class="ty-checkout-card ty-payment-methods">
+                            <div class="ty-checkout-card__head">
+                                <div>
+                                    <h5>طريقة الدفع</h5>
+                                    <span>اختاري الطريقة الأنسب لك قبل إتمام الطلب.</span>
+                                </div>
+                                <i class="fa-solid fa-shield-check"></i>
+                            </div>
+                            <div class="ty-payment-options">
+                                @foreach ($paymentOptions as $paymentValue => $paymentOption)
+                                    @php($checkedPayment = old('payment_method', $defaultPaymentMethod) === $paymentValue)
+                                    <label class="ty-payment-option">
+                                        <input type="radio" name="payment_method" value="{{ $paymentValue }}" @if ($checkedPayment) checked @endif>
+                                        <span class="ty-payment-option__icon">
+                                            <i class="{{ $paymentOption['icon'] }}"></i>
+                                        </span>
+                                        <span class="ty-payment-option__copy">
+                                            <strong>{{ $paymentOption['title'] }}</strong>
+                                            <span>{{ $paymentOption['description'] }}</span>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
 
                     @if ($existShipment)
                         @if (\Auth::guard('customer')->check())
