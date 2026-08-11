@@ -248,6 +248,7 @@ class PaymentService
         $body = 'فاتورة جديدة قام العميل:' . PHP_EOL  . $customer->name . '     بطلب الخدمات التالية:' . PHP_EOL  . $title;
         if (isset($serviceInvoice)) {
             InternalNotificationService::orderCreated($serviceInvoice);
+            $this->sendOrderShippingThankYou($customer, $serviceInvoice, $title);
         }
 
         foreach ($cart_ids as $cart) {
@@ -355,6 +356,36 @@ class PaymentService
         // dd($payload,env('JITSI_SECRET'));
         return \Firebase\JWT\JWT::encode($payload, env('JITSI_SECRET'), 'HS256');
     }
+    private function sendOrderShippingThankYou(Customer $customer, ServiceInvoice $serviceInvoice, string $productsTitle): void
+    {
+        $email = $serviceInvoice->email ?: $customer->email;
+        if (!$email) {
+            return;
+        }
+
+        $productItems = collect(preg_split('/\r\n|\r|\n/', trim($productsTitle)))
+            ->filter()
+            ->map(function ($item) {
+                return '<li>' . e($item) . '</li>';
+            })
+            ->implode('');
+
+        $shipmentPrice = (float) ($serviceInvoice->shipment_price ?? 0);
+        $totalAmount = (float) ($serviceInvoice->paid_amount ?? 0) + $shipmentPrice;
+        $invoiceUrl = route('customer.invoice', ['id' => $serviceInvoice->id]);
+
+        $body = '<p>عميلتنا العزيزة ' . e($serviceInvoice->name ?: $customer->name) . '،</p>'
+            . '<p>شكراً لطلبك من متجر تيانيل. تم استلام طلبك بنجاح، وسيتم التواصل معك قريباً بخصوص تفاصيل الشحن والتوصيل.</p>'
+            . '<p><strong>رقم الطلب:</strong> #' . e($serviceInvoice->id) . '</p>'
+            . ($productItems ? '<p><strong>المنتجات المطلوبة:</strong></p><ul>' . $productItems . '</ul>' : '')
+            . '<p><strong>إجمالي الطلب:</strong> ' . e(number_format($totalAmount, 2)) . ' ريال</p>'
+            . '<p>يرجى التأكد من جاهزية رقم الجوال المسجل لدينا حتى يتمكن فريق تيانيل أو شركة الشحن من تنسيق التوصيل معك بسهولة.</p>'
+            . '<p><a href="' . e($invoiceUrl) . '">عرض تفاصيل الطلب</a></p>'
+            . '<p>تيانيل - أنت تستحقين الأجمل</p>';
+
+        General::sendMail('شكراً لطلبك من تيانيل', $body, 'order shipping thank you', $email);
+    }
+
     public static function send_notification_customer($service, $customer, $addtion_txt = null)
     {
         $title       = $service->title;
