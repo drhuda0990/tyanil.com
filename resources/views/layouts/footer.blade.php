@@ -181,14 +181,14 @@
                 </ul>
             </div>
             <div class="jodfy-credit-row">
-                <a class="jodfy-credit" href="https://www.jodfy.com" target="_blank" rel="noopener noreferrer"
-                    aria-label="تطوير جودفاي Jodfy">
+                <a class="jodfy-credit" href="https://www.jodfay.com.sa" target="_blank" rel="noopener noreferrer"
+                    aria-label="تطوير وتصميم Jodfay">
                     <span class="jodfy-credit__logo" aria-hidden="true">
-                        <img src="{{ asset('images/jodfy-logo.jpeg') }}" alt="">
+                        <img src="{{ asset('images/jodfay-solutions.png') }}" alt="">
                     </span>
                     <span class="jodfy-credit__text">
-                        <span class="jodfy-credit__arabic">تطوير جودفاي</span>
-                        <strong>Jodfy</strong>
+                        <span class="jodfy-credit__arabic">تطوير وتصميم</span>
+                        <strong>Jodfay</strong>
                     </span>
                 </a>
             </div>
@@ -339,19 +339,21 @@
         position: relative;
         display: grid;
         place-items: center;
-        flex: 0 0 34px;
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
+        flex: 0 0 124px;
+        width: 124px;
+        height: 52px;
+        padding: 3px 6px;
+        border-radius: 6px;
         background: #FFFFFF;
         box-shadow: 0 10px 24px rgba(58, 30, 91, 0.20);
         overflow: hidden;
+        box-sizing: border-box;
     }
 
     .jodfy-credit__logo::after {
         content: "";
         position: absolute;
-        inset: -3px;
+        inset: 0;
         border-radius: inherit;
         border: 1px solid rgba(126, 42, 241, 0.28);
     }
@@ -360,7 +362,7 @@
         display: block;
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
     }
 
     .footer-two-area .footer__copyright .jodfy-credit .jodfy-credit__text {
