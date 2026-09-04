@@ -196,7 +196,72 @@
     </div>
 </footer>
 
+@php
+    $whatsappDigits = preg_replace('/\D+/', '', (string) $gSetting->whatsapp);
+
+    if (str_starts_with($whatsappDigits, '00')) {
+        $whatsappDigits = substr($whatsappDigits, 2);
+    }
+
+    if (str_starts_with($whatsappDigits, '0')) {
+        $whatsappDigits = '966' . substr($whatsappDigits, 1);
+    } elseif ($whatsappDigits && !str_starts_with($whatsappDigits, '966')) {
+        $whatsappDigits = '966' . $whatsappDigits;
+    }
+
+    $whatsappMessage = rawurlencode('مرحباً تيانيل، أحتاج المساعدة بخصوص أحد المنتجات.');
+@endphp
+
+@if ($whatsappDigits)
+    <a class="ty-whatsapp-float"
+        href="https://wa.me/{{ $whatsappDigits }}?text={{ $whatsappMessage }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="تواصلي مع تيانيل عبر واتساب"
+        title="تواصلي معنا عبر واتساب"
+        onclick="window.tyanielTrackTikTok && window.tyanielTrackTikTok('Contact', { content_name: 'WhatsApp' })">
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+    </a>
+@endif
+
 <style>
+    .ty-whatsapp-float {
+        position: fixed;
+        left: clamp(16px, 2.2vw, 30px);
+        bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+        z-index: 9998;
+        display: grid;
+        place-items: center;
+        width: 60px;
+        height: 60px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        color: #ffffff !important;
+        background: #25D366;
+        box-shadow: 0 12px 30px rgba(18, 94, 55, 0.32);
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .ty-whatsapp-float i {
+        color: inherit;
+        font-size: 32px;
+        line-height: 1;
+    }
+
+    .ty-whatsapp-float:hover,
+    .ty-whatsapp-float:focus-visible {
+        color: #ffffff !important;
+        background: #1FBD5A;
+        box-shadow: 0 16px 36px rgba(18, 94, 55, 0.4);
+        transform: translateY(-3px);
+    }
+
+    .ty-whatsapp-float:focus-visible {
+        outline: 3px solid rgba(75, 33, 63, 0.45);
+        outline-offset: 3px;
+    }
+
     .footer-policy-link {
         display: inline-flex;
         align-items: center;
@@ -401,6 +466,17 @@
     }
 
     @media (max-width: 575px) {
+        .ty-whatsapp-float {
+            left: 14px;
+            bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            width: 54px;
+            height: 54px;
+        }
+
+        .ty-whatsapp-float i {
+            font-size: 29px;
+        }
+
         .jodfy-credit-row {
             justify-content: center;
             margin-left: 0;
