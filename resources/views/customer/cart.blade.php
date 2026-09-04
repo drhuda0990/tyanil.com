@@ -315,7 +315,9 @@
                 <form id="form_submit_cart" name="form_submit_cart" class="form-box" action="{{ route('cart.submit') }}"
                     method="POST">
                     @csrf
-                    @php($customer = \Auth::guard('customer')->user())
+                    @php
+                        $customer = \Auth::guard('customer')->user();
+                    @endphp
                     <div id="discount_id_input"></div>
 
                     <div class="ty-cart-trust" aria-label="مميزات الطلب">
@@ -348,7 +350,9 @@
                             </div>
                             <div class="ty-payment-options">
                                 @foreach ($paymentOptions as $paymentValue => $paymentOption)
-                                    @php($checkedPayment = old('payment_method', $defaultPaymentMethod) === $paymentValue)
+                                    @php
+                                        $checkedPayment = old('payment_method', $defaultPaymentMethod) === $paymentValue;
+                                    @endphp
                                     <label class="ty-payment-option">
                                         <input type="radio" name="payment_method" value="{{ $paymentValue }}" @if ($checkedPayment) checked @endif>
                                         <span class="ty-payment-option__icon">
@@ -402,7 +406,9 @@
                                     <select id="checkout_city" name="checkout_city" required>
                                         <option value="">اختاري المدينة</option>
                                         @foreach ($cities as $city)
-                                            @php($selectedCity = old('checkout_city', optional($checkoutAddress)->city_id))
+                                            @php
+                                                $selectedCity = old('checkout_city', optional($checkoutAddress)->city_id);
+                                            @endphp
                                             <option value="{{ $city->city_arName }}" @if ($selectedCity == $city->city_arName) selected @endif>
                                                 {{ $city->city_arName }}
                                             </option>
