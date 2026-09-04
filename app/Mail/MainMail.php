@@ -44,19 +44,15 @@ class MainMail extends Mailable
       ->subject(config('app.name', 'تيانيل') . ' | ' . $this->request['title'])
       ->with('request', $this->request);
 
-    $mail->withSymfonyMessage(function ($message) {
-      $headers = $message->getHeaders();
-      $headers->addTextHeader('Auto-Submitted', 'auto-generated');
-      $headers->addTextHeader('X-Auto-Response-Suppress', 'All');
-      $headers->addTextHeader('X-Entity-Ref-ID', sha1(config('app.url') . '|' . ($this->request['title'] ?? '') . '|' . microtime(true)));
-
-      if (($this->request['mail_category'] ?? null) === 'marketing' && !empty($this->request['unsubscribe_url'])) {
+    if (($this->request['mail_category'] ?? null) === 'marketing' && !empty($this->request['unsubscribe_url'])) {
+      $mail->withSymfonyMessage(function ($message) {
+        $headers = $message->getHeaders();
         $headers->addTextHeader('List-ID', EmailCompliance::listId());
         $headers->addTextHeader('List-Unsubscribe', '<' . $this->request['unsubscribe_url'] . '>, <mailto:' . config('mail.from.address') . '?subject=unsubscribe>');
         $headers->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
         $headers->addTextHeader('Precedence', 'bulk');
-      }
-    });
+      });
+    }
 
     return $mail;
   }

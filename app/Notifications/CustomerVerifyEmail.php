@@ -32,12 +32,7 @@ class CustomerVerifyEmail extends Notification
                 'body' => $body,
                 'actionText' => 'تفعيل البريد الإلكتروني',
                 'actionUrl' => $verificationUrl,
-            ])
-            ->withSymfonyMessage(function ($message) {
-                $headers = $message->getHeaders();
-                $headers->addTextHeader('Auto-Submitted', 'auto-generated');
-                $headers->addTextHeader('X-Auto-Response-Suppress', 'All');
-            });
+            ]);
     }
 
     protected function verificationUrl(MustVerifyEmail $notifiable): string

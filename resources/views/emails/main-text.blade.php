@@ -7,6 +7,14 @@
 {{ $request['unsubscribe_url'] }}
 
 @endif
-{{ \App\Support\StoreSettings::get()->name ?? config('app.name', 'تيانيل') }}
-{{ \App\Support\StoreSettings::get()->website ?: url('/') }}
-{{ \App\Support\StoreSettings::get()->email_1 ?: config('mail.from.address') }}
+@php
+    $settings = \App\Support\StoreSettings::get();
+    $registrationNumber = $settings->business_register_number ?: $settings->commercial_register;
+@endphp
+{{ $settings->name ?? config('app.name', 'تيانيل') }} - أنت تستحقين الأجمل
+{{ $settings->address }}
+@if ($registrationNumber)
+الرقم الموحد للمنشأة: {{ $registrationNumber }}
+@endif
+{{ $settings->website ?: url('/') }}
+{{ $settings->email_1 ?: config('mail.from.address') }}

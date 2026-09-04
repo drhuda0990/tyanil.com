@@ -1,7 +1,7 @@
 @php
     $settings = \App\Support\StoreSettings::get();
-    $logo = $settings->logo2 ?: $settings->logo;
-    $logoUrl = $logo ? asset('storage/' . $logo) : null;
+    $storeName = $settings->name ?? config('app.name', 'تيانيل');
+    $registrationNumber = $settings->business_register_number ?: $settings->commercial_register;
 @endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -20,9 +20,7 @@
                     style="max-width:640px;background:#ffffff;border:1px solid #ead3dc;border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(75,33,63,.12);">
                     <tr>
                         <td align="center" style="background:#4b213f;padding:28px 24px 22px;">
-                            @if ($logoUrl)
-                                <img src="{{ $logoUrl }}" alt="{{ $settings->name }}" style="max-width:170px;height:auto;display:block;margin:0 auto 12px;">
-                            @endif
+                            <div style="font-size:30px;line-height:1.5;font-weight:700;color:#ffffff;">{{ $storeName }}</div>
                             <div style="font-size:22px;line-height:1.7;font-weight:700;color:#fff4ef;">
                                 {{ $request['title'] ?? 'رسالة من تيانيل' }}
                             </div>
@@ -41,7 +39,13 @@
                     </tr>
                     <tr>
                         <td style="padding:18px 28px;background:#fff4ef;color:#7b6574;font-size:13px;line-height:1.8;text-align:center;">
-                            <div>{{ $settings->name ?? config('app.name', 'تيانيل') }} - أنت تستحقين الأجمل</div>
+                            <div>{{ $storeName }} - أنت تستحقين الأجمل</div>
+                            @if ($settings->address)
+                                <div>{{ $settings->address }}</div>
+                            @endif
+                            @if ($registrationNumber)
+                                <div>الرقم الموحد للمنشأة: {{ $registrationNumber }}</div>
+                            @endif
                             <div>
                                 <a href="{{ $settings->website ?: url('/') }}" style="color:#4b213f;text-decoration:none;">{{ $settings->website ?: url('/') }}</a>
                                 @if ($settings->email_1)
@@ -53,7 +57,7 @@
                     </tr>
                 </table>
                 <div style="font-size:12px;color:#9a8291;margin-top:16px;">
-                    &copy; {{ date('Y') }} {{ $settings->name ?? config('app.name', 'تيانيل') }}. جميع الحقوق محفوظة.
+                    &copy; {{ date('Y') }} {{ $storeName }}. جميع الحقوق محفوظة.
                 </div>
             </td>
         </tr>
