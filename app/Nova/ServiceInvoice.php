@@ -52,6 +52,10 @@ class ServiceInvoice extends Resource
      */
     public static $search = [
         'title',
+        'name',
+        'phone',
+        'email',
+        'city',
         'customer.name',
         'discount.code'
     ];
@@ -81,13 +85,13 @@ class ServiceInvoice extends Resource
             Text::make('قيمة الخصم', 'discount'),
             Text::make('قيمة الشحن', 'shipment_price'),
             Text::make('الاسم في عنوان الشحن ', 'name')
-                ->hideFromIndex(),
+                ->sortable(),
             Text::make('الجوال في عنوان الشحن ', 'phone')
-                ->hideFromIndex(),
+                ->sortable(),
             Text::make('الايميل في عنوان الشحن', 'email')
                 ->hideFromIndex(),
             Text::make('مدينة الشحن', 'city')
-                ->hideFromIndex(),
+                ->sortable(),
 
             Text::make('عنوان الشحن', 'address')
                 ->hideFromIndex(),
