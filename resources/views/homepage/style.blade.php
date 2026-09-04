@@ -11214,7 +11214,7 @@ CSS TABLE OF CONTENTS
     }
 
     .store-page-hero {
-        padding: 118px 0 104px;
+        padding: 76px 0 70px;
     }
 
     .store-contact-page,
@@ -11462,6 +11462,11 @@ CSS TABLE OF CONTENTS
             #FFF4EF;
         background-size: 48px 48px;
         overflow: hidden;
+    }
+
+    .store-products-page.pt-120,
+    .store-product-detail-page.pt-120 {
+        padding-top: 72px;
     }
 
     .store-products-page::before,
@@ -12451,7 +12456,12 @@ CSS TABLE OF CONTENTS
         }
 
         .store-page-hero {
-            padding: 82px 0 72px;
+            padding: 62px 0 56px;
+        }
+
+        .store-products-page.pt-120,
+        .store-product-detail-page.pt-120 {
+            padding-top: 54px;
         }
 
         .store-contact-page::after,

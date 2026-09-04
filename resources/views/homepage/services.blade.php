@@ -81,7 +81,7 @@
             </div>
             <div class="row g-4">
                 @foreach ($services as $service)
-                    <div class="col-xl-4 col-md-6 wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">
+                    <div class="col-xl-3 col-md-6 wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">
                         @include('homepage.serviceCard')
                     </div>
                 @endforeach

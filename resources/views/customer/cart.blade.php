@@ -70,6 +70,31 @@
             line-height: 1.8;
         }
 
+        .ty-cart-trust {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin: 18px 0 22px;
+        }
+
+        .ty-cart-trust__item {
+            min-height: 78px;
+            padding: 14px;
+            border: 1px solid rgba(75, 33, 63, .12);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .78);
+            color: #4B213F;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .ty-cart-trust__item i {
+            display: block;
+            margin-bottom: 8px;
+            color: #D989A3;
+            font-size: 20px;
+        }
+
         .ty-payment-methods {
             margin-bottom: 20px;
         }
@@ -166,6 +191,10 @@
 
             .ty-payment-options {
                 grid-template-columns: 1fr;
+            }
+
+            .ty-cart-trust {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
@@ -286,7 +315,27 @@
                 <form id="form_submit_cart" name="form_submit_cart" class="form-box" action="{{ route('cart.submit') }}"
                     method="POST">
                     @csrf
+                    @php($customer = \Auth::guard('customer')->user())
                     <div id="discount_id_input"></div>
+
+                    <div class="ty-cart-trust" aria-label="مميزات الطلب">
+                        <div class="ty-cart-trust__item">
+                            <i class="fa-solid fa-user-check"></i>
+                            دفع كزائرة
+                        </div>
+                        <div class="ty-cart-trust__item">
+                            <i class="fa-solid fa-shield-check"></i>
+                            دفع آمن
+                        </div>
+                        <div class="ty-cart-trust__item">
+                            <i class="fa-solid fa-truck-fast"></i>
+                            تواصل للشحن
+                        </div>
+                        <div class="ty-cart-trust__item">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            استبدال واسترجاع
+                        </div>
+                    </div>
 
                     @if (!empty($paymentOptions))
                         <section class="ty-checkout-card ty-payment-methods">
@@ -316,81 +365,72 @@
                     @endif
 
                     @if ($existShipment)
-                        @if (\Auth::guard('customer')->check())
-                            @php($customer = \Auth::guard('customer')->user())
-                            <section class="ty-checkout-card" id="checkout-address">
-                                <div class="ty-checkout-card__head">
-                                    <div>
-                                        <h5>عنوان الشحن والدفع</h5>
-                                        <span>يتم حفظه مع الطلب مباشرة دون الانتقال لصفحة أخرى.</span>
-                                    </div>
-                                    <i class="fa-solid fa-location-dot"></i>
-                                </div>
-                                <input type="hidden" name="checkout_address_id" value="{{ old('checkout_address_id', optional($checkoutAddress)->id) }}">
-                                <div class="ty-checkout-grid">
-                                    <div class="ty-checkout-field">
-                                        <label for="checkout_name">اسم المستلم</label>
-                                        <input id="checkout_name" name="checkout_name" type="text"
-                                            value="{{ old('checkout_name', optional($checkoutAddress)->name ?: $customer->name) }}" required>
-                                    </div>
-                                    <div class="ty-checkout-field">
-                                        <label for="checkout_phone">رقم الجوال</label>
-                                        <input id="checkout_phone" name="checkout_phone" type="tel"
-                                            value="{{ old('checkout_phone', optional($checkoutAddress)->phone ?: $customer->phone) }}" required>
-                                    </div>
-                                    <div class="ty-checkout-field">
-                                        <label for="checkout_email">البريد الإلكتروني</label>
-                                        <input id="checkout_email" name="checkout_email" type="email"
-                                            value="{{ old('checkout_email', optional($checkoutAddress)->email ?: $customer->email) }}" required>
-                                    </div>
-                                    <div class="ty-checkout-field">
-                                        <label for="checkout_country">الدولة</label>
-                                        <input id="checkout_country" name="checkout_country" type="text"
-                                            value="المملكة العربية السعوديه" readonly required>
-                                    </div>
-                                    <div class="ty-checkout-field">
-                                        <label for="checkout_city">المدينة</label>
-                                        <select id="checkout_city" name="checkout_city" required>
-                                            <option value="">اختاري المدينة</option>
-                                            @foreach ($cities as $city)
-                                                @php($selectedCity = old('checkout_city', optional($checkoutAddress)->city_id))
-                                                <option value="{{ $city->city_arName }}" @if ($selectedCity == $city->city_arName) selected @endif>
-                                                    {{ $city->city_arName }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="ty-checkout-field">
-                                        <label for="checkout_street">الحي</label>
-                                        <input id="checkout_street" name="checkout_street" type="text"
-                                            value="{{ old('checkout_street', optional($checkoutAddress)->street) }}" required>
-                                    </div>
-                                    <div class="ty-checkout-field ty-checkout-field--wide">
-                                        <label for="checkout_address">العنوان الوطني</label>
-                                        <input id="checkout_address" name="checkout_address" type="text"
-                                            value="{{ old('checkout_address', optional($checkoutAddress)->address) }}"
-                                            placeholder="مثال: رقم المبنى، الشارع، الرمز البريدي، الرقم الإضافي" required>
-                                    </div>
-                                </div>
-                                <p class="ty-checkout-note">العنوان إلزامي لإتمام الشحن، ويمكن تعديله هنا قبل كل طلب.</p>
-                            </section>
-                            <button class="btn-one1 fLeft" type="submit">
-                                <i class="fa-light fa-arrow-right-long"></i>
-                                إكمال الدفع
-                            </button>
-                        @else
-                            <section class="ty-checkout-card ty-checkout-login">
+                        <section class="ty-checkout-card" id="checkout-address">
+                            <div class="ty-checkout-card__head">
                                 <div>
-                                    <h5>تسجيل الدخول مطلوب لإتمام الدفع</h5>
-                                    <p class="ty-checkout-note">بعد تسجيل الدخول سيبقى المنتج في السلة ويمكنك إدخال عنوان الشحن هنا مباشرة.</p>
+                                    <h5>عنوان الشحن والدفع</h5>
+                                    <span>أكملي الطلب مباشرة، وسيتم التواصل معك بخصوص الشحن.</span>
                                 </div>
-                                <a class="btn-one" href="{{ route('customer.login') }}">تسجيل الدخول</a>
-                            </section>
-                        @endif
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            @if ($customer)
+                                <input type="hidden" name="checkout_address_id" value="{{ old('checkout_address_id', optional($checkoutAddress)->id) }}">
+                            @endif
+                            <div class="ty-checkout-grid">
+                                <div class="ty-checkout-field">
+                                    <label for="checkout_name">اسم المستلم</label>
+                                    <input id="checkout_name" name="checkout_name" type="text"
+                                        value="{{ old('checkout_name', optional($checkoutAddress)->name ?: optional($customer)->name) }}" required>
+                                </div>
+                                <div class="ty-checkout-field">
+                                    <label for="checkout_phone">رقم الجوال</label>
+                                    <input id="checkout_phone" name="checkout_phone" type="tel"
+                                        value="{{ old('checkout_phone', optional($checkoutAddress)->phone ?: optional($customer)->phone) }}" required>
+                                </div>
+                                <div class="ty-checkout-field">
+                                    <label for="checkout_email">البريد الإلكتروني</label>
+                                    <input id="checkout_email" name="checkout_email" type="email"
+                                        value="{{ old('checkout_email', optional($checkoutAddress)->email ?: optional($customer)->email) }}" required>
+                                </div>
+                                <div class="ty-checkout-field">
+                                    <label for="checkout_country">الدولة</label>
+                                    <input id="checkout_country" name="checkout_country" type="text"
+                                        value="المملكة العربية السعوديه" readonly required>
+                                </div>
+                                <div class="ty-checkout-field">
+                                    <label for="checkout_city">المدينة</label>
+                                    <select id="checkout_city" name="checkout_city" required>
+                                        <option value="">اختاري المدينة</option>
+                                        @foreach ($cities as $city)
+                                            @php($selectedCity = old('checkout_city', optional($checkoutAddress)->city_id))
+                                            <option value="{{ $city->city_arName }}" @if ($selectedCity == $city->city_arName) selected @endif>
+                                                {{ $city->city_arName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="ty-checkout-field">
+                                    <label for="checkout_street">الحي</label>
+                                    <input id="checkout_street" name="checkout_street" type="text"
+                                        value="{{ old('checkout_street', optional($checkoutAddress)->street) }}" required>
+                                </div>
+                                <div class="ty-checkout-field ty-checkout-field--wide">
+                                    <label for="checkout_address">العنوان الوطني</label>
+                                    <input id="checkout_address" name="checkout_address" type="text"
+                                        value="{{ old('checkout_address', optional($checkoutAddress)->address) }}"
+                                        placeholder="مثال: رقم المبنى، الشارع، الرمز البريدي، الرقم الإضافي" required>
+                                </div>
+                            </div>
+                            <p class="ty-checkout-note">لا تحتاجين إنشاء حساب لإتمام الطلب. سنستخدم هذه البيانات فقط لتأكيد الطلب والشحن.</p>
+                        </section>
+                        <button class="btn-one1 fLeft" type="submit">
+                            <i class="fa-light fa-arrow-right-long"></i>
+                            إكمال الدفع الآن
+                        </button>
                     @else
                         <button class="btn-one1 fLeft" type="submit">
                             <i class="fa-light fa-arrow-right-long"></i>
-                            إكمال الدفع
+                            إكمال الدفع الآن
                         </button>
                     @endif
                 </form>
@@ -401,8 +441,31 @@
 <!--* ********************************* -->
 @section('JScript')
 
+    @php
+        $cartTrackingItems = $carts->map(function ($cart) {
+            return [
+                'content_id' => (string) $cart->service_id,
+                'content_name' => $cart->title,
+                'quantity' => 1,
+                'price' => (float) $cart->amount,
+            ];
+        })->values();
+    @endphp
 
     <script>
+        const checkoutTrackingItems = @json($cartTrackingItems);
+        const checkoutBaseTotal = Number(@json((float) $totalPrice));
+
+        $('#form_submit_cart').on('submit', function() {
+            const displayedTotal = Number(String($('#cartTotal').text()).replace(/[^\d.]/g, ''));
+            window.tyanielTrackTikTok('InitiateCheckout', {
+                value: Number.isFinite(displayedTotal) && displayedTotal > 0 ? displayedTotal : checkoutBaseTotal,
+                currency: 'SAR',
+                contents: checkoutTrackingItems,
+                content_type: 'product',
+            });
+        });
+
         $('#form_code').on('submit', function(e) {
             e.preventDefault();
             $.ajaxSetup({

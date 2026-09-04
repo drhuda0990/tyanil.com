@@ -79,6 +79,14 @@
             ttq.load('DAAGOQBC77UBPDTVKN70');
             ttq.page();
         }(window, document, 'ttq');
+
+        window.tyanielTrackTikTok = window.tyanielTrackTikTok || function(eventName, payload) {
+            try {
+                if (window.ttq && typeof window.ttq.track === 'function') {
+                    window.ttq.track(eventName, payload || {});
+                }
+            } catch (error) {}
+        };
     </script>
     <!-- TikTok Pixel Code End -->
 

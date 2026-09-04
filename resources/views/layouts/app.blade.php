@@ -19,6 +19,14 @@
             }[character];
         });
     };
+
+    window.tyanielTrackTikTok = window.tyanielTrackTikTok || function(eventName, payload) {
+        try {
+            if (window.ttq && typeof window.ttq.track === 'function') {
+                window.ttq.track(eventName, payload || {});
+            }
+        } catch (error) {}
+    };
 </script>
 @if ($errors->any())
     <script>
@@ -58,6 +66,18 @@
 @if (session('cartAdded'))
     <script>
         const cartAddedMessage = @json(session('cartAdded'));
+        const cartAddedProduct = @json(session('cartAddedProduct'));
+
+        if (cartAddedProduct) {
+            window.tyanielTrackTikTok('AddToCart', {
+                content_id: cartAddedProduct.content_id,
+                content_name: cartAddedProduct.content_name,
+                content_type: 'product',
+                value: Number(cartAddedProduct.value || 0),
+                currency: cartAddedProduct.currency || 'SAR',
+            });
+        }
+
         Swal.fire({
             title: "",
             icon: "success",
@@ -77,6 +97,20 @@
                 Swal.getPopup().setAttribute('dir', 'rtl');
             }
         });
+    </script>
+@endif
+@if (session('purchaseCompleted'))
+    <script>
+        const purchaseCompleted = @json(session('purchaseCompleted'));
+
+        if (purchaseCompleted) {
+            window.tyanielTrackTikTok('CompletePayment', {
+                value: Number(purchaseCompleted.value || 0),
+                currency: purchaseCompleted.currency || 'SAR',
+                content_ids: purchaseCompleted.content_ids || [],
+                content_type: 'product',
+            });
+        }
     </script>
 @endif
 @if (session('info'))

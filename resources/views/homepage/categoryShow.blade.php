@@ -52,7 +52,7 @@
             @if ($services->count() > 0)
                 <div class="row g-4 rtlDirection">
                     @foreach ($services as $service)
-                        <div class="col-xl-4 col-md-6 wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">
+                        <div class="col-xl-3 col-md-6 wow fadeInUp" data-wow-delay="00ms" data-wow-duration="1500ms">
                             @include('homepage.serviceCard')
                         </div>
                     @endforeach
@@ -65,7 +65,7 @@
                 </div>
                 <div class="row g-4 rtlDirection">
                     @foreach ($mainCategory->serviceActivateSubCategories as $sCategory)
-                        <div class="col-xl-4 col-md-6 wow fadeInLeft rtlDirection" data-wow-delay="00ms"
+                        <div class="col-xl-3 col-md-6 wow fadeInLeft rtlDirection" data-wow-delay="00ms"
                             data-wow-duration="1500ms">
                             <a class="topic__item store-category-card item-one bGwhite active"
                                 href="{{ route('category.services', ['id' => $sCategory->id, 'sub' => 1]) }}">

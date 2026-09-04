@@ -588,9 +588,16 @@ class CustomerController extends Controller
     {
         $result = $this->addToCart($request);
 
-        if ($result !== true) {
+        if (! $result instanceof Cart) {
             return redirect()->back()->with('message', $result);
         }
+
+        Session::flash('cartAddedProduct', [
+            'content_id' => (string) $result->service_id,
+            'content_name' => $result->title,
+            'value' => (float) $result->amount,
+            'currency' => 'SAR',
+        ]);
 
         return redirect()->back()->with(
             'cartAdded',
@@ -640,7 +647,7 @@ class CustomerController extends Controller
         // $cart->note = $request->note;
         $cart->save();
 
-        return true;
+        return $cart;
     }
     public function code_id(Request $request)
     {
@@ -772,20 +779,28 @@ class CustomerController extends Controller
     public function cartSubmit(Request $request)
     {
         $paymentService = new PaymentService();
-        if (Auth::guard('customer')->user()->carts() != null) {
+        $carts = $this->cartItems();
+
+        if ($carts->count() > 0) {
             $customer = Auth::guard('customer')->user();
             $generalSettings = $this->generalSettings();
             $tapSecretAPIKey = $generalSettings->tapSectretKey;
-            $carts = $this->cartItems();
             if ($stockMessage = $this->cartStockMessage($carts)) {
                 return redirect()->route('customer.cart')->with('message', $stockMessage);
             }
 
             $cartTotalPrice = $paymentService->cartTotalPrice($carts);
             $existShipment = $cartTotalPrice['existShipment'];
+            $address = null;
             if ($existShipment) {
+                $this->validateCheckoutAddress($request);
+                if (! $customer) {
+                    $customer = $this->guestCheckoutCustomer($request);
+                }
                 $address = $this->storeCheckoutAddress($request, $customer);
                 $request->merge(['address' => $address->id]);
+            } elseif (! $customer) {
+                $customer = $this->guestCheckoutCustomer($request);
             }
             $key = "Bearer $tapSecretAPIKey";
             $curl = curl_init();
@@ -799,7 +814,7 @@ class CustomerController extends Controller
             $cid = $customer->id . rand(10, 100);
             $amount = 0;
             $shipment_price_saved = 0;
-            foreach (Auth::guard('customer')->user()->carts as $cart) {
+            foreach ($carts as $cart) {
                 // if ($cart->amount == 0) {
                 //     // dd('here');
                 //     $paymentRequest = $this->newPaymentRequest(null, $request, $cart->amount, $cart, $discount_id, '');
@@ -811,7 +826,9 @@ class CustomerController extends Controller
                 $cart->save();
                 // }
             }
-            Auth::guard('customer')->user()->load('carts'); // refresh relationship after deleting
+            if (Auth::guard('customer')->check()) {
+                Auth::guard('customer')->user()->load('carts');
+            }
 
 
             $amount = $cartTotalPrice['total_price'];
@@ -824,13 +841,17 @@ class CustomerController extends Controller
             }
             if ($amount == 0) {
                 $freePayment = $this->localPaymentData(0, 'FREE');
-                $paymentRequest = $this->newPaymentRequest($freePayment, $request, 0, collect($carts), $discount_id, 'free');
+                $paymentRequest = $this->newPaymentRequest($freePayment, $request, 0, collect($carts), $discount_id, 'free', $customer);
                 $paymentService->customerServiceOrder($paymentRequest, $paymentRequest->payment_id, $freePayment, $this->localPaymentDefinition());
 
                 return redirect()->route('customer.cart')->with(
                     'message',
                     'تم  إضافة الطلب بنجاح '
-                );
+                )->with('purchaseCompleted', [
+                    'value' => 0,
+                    'currency' => 'SAR',
+                    'content_ids' => $carts->pluck('service_id')->map(fn ($id) => (string) $id)->values(),
+                ]);
             }
 
             // if (count(Auth::guard('customer')->user()->carts) == 0) {
@@ -858,7 +879,7 @@ class CustomerController extends Controller
 
             if ($paymentMethod === 'moyasar' && $this->moyasarPaymentIsReady($generalSettings)) {
                 $moyasarPayment = $this->localPaymentData((float) $amount, 'INITIATED');
-                $paymentRequest = $this->newPaymentRequest($moyasarPayment, $request, $amount, $carts, $discount_id, 'moyasar');
+                $paymentRequest = $this->newPaymentRequest($moyasarPayment, $request, $amount, $carts, $discount_id, 'moyasar', $customer);
                 $paymentRequest->payment_url = route('moyasar.form', ['paymentRequest' => $paymentRequest->id]);
                 $paymentRequest->save();
 
@@ -867,18 +888,22 @@ class CustomerController extends Controller
 
             if (!$this->tapPaymentIsReady($generalSettings)) {
                 $manualPayment = $this->localPaymentData((float) $amount, 'MANUAL');
-                $paymentRequest = $this->newPaymentRequest($manualPayment, $request, $amount, $carts, $discount_id, 'manual');
+                $paymentRequest = $this->newPaymentRequest($manualPayment, $request, $amount, $carts, $discount_id, 'manual', $customer);
                 $paymentService->customerServiceOrder($paymentRequest, $paymentRequest->payment_id, $manualPayment, $this->localPaymentDefinition());
 
-                return redirect()->route('customer.dashboard')->with(
+                return redirect()->route(Auth::guard('customer')->check() ? 'customer.dashboard' : 'customer.cart')->with(
                     'message',
                     'تم إنشاء الطلب بنجاح. الدفع الإلكتروني غير مفعل حالياً، ويمكن للمدير متابعة الطلب من لوحة التحكم.'
-                );
+                )->with('purchaseCompleted', [
+                    'value' => (float) $amount,
+                    'currency' => 'SAR',
+                    'content_ids' => $carts->pluck('service_id')->map(fn ($id) => (string) $id)->values(),
+                ]);
             }
             // dd($amount, $discount_id);
-            $phone = $customer->phone;
-            $email = $customer->email;
-            $name = $customer->name;
+            $phone = $address->phone ?? $customer->phone ?? '500000000';
+            $email = $address->email ?? $customer->email ?? 'orders@tyanil.com';
+            $name = $address->name ?? $customer->name ?? 'عميلة تيانيل';
             curl_setopt_array($curl, array(
                 CURLOPT_URL => "https://api.tap.company/v2/charges",
                 CURLOPT_RETURNTRANSFER => true,
@@ -915,7 +940,7 @@ class CustomerController extends Controller
                 $existPaymentRequest = PaymentRequest::where('payment_id', $data->id)->first();
 
                 if (!$existPaymentRequest) {
-                    $paymentRequest = $this->newPaymentRequest($data, $request, $amount, $carts, $discount_id, 'tap');
+                    $paymentRequest = $this->newPaymentRequest($data, $request, $amount, $carts, $discount_id, 'tap', $customer);
                     $redirectUrl = $data->transaction->url;
                     return redirect($redirectUrl);
                 } else {
@@ -941,7 +966,7 @@ class CustomerController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
-        if (! $customer || (int) $paymentRequest->customer_id !== (int) $customer->id || $paymentRequest->payment_type !== 'moyasar') {
+        if (($customer && (int) $paymentRequest->customer_id !== (int) $customer->id) || $paymentRequest->payment_type !== 'moyasar') {
             abort(404);
         }
 
@@ -965,7 +990,7 @@ class CustomerController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
-        if (! $customer || (int) $paymentRequest->customer_id !== (int) $customer->id || $paymentRequest->payment_type !== 'moyasar') {
+        if (($customer && (int) $paymentRequest->customer_id !== (int) $customer->id) || $paymentRequest->payment_type !== 'moyasar') {
             abort(404);
         }
 
@@ -976,10 +1001,21 @@ class CustomerController extends Controller
         }
 
         if (ServiceInvoice::where('refrence_id', $moyasarPaymentId)->exists()) {
-            return redirect()->route('customer.dashboard')->with('message', 'تم إستكمال الدفع بنجاح');
+            return redirect()->route($customer ? 'customer.dashboard' : 'customer.cart')
+                ->with('message', 'تم إستكمال الدفع بنجاح. شكراً لطلبك من تيانيل، وسيتم التواصل معك بخصوص الشحن.')
+                ->with('purchaseCompleted', [
+                    'value' => (float) $paymentRequest->amount,
+                    'currency' => 'SAR',
+                    'content_ids' => $this->paymentRequestContentIds($paymentRequest),
+                ]);
         }
 
         $settings = $this->moyasarSettings($this->generalSettings());
+        $paymentCustomer = $customer ?: Customer::find($paymentRequest->customer_id);
+
+        if (! $paymentCustomer) {
+            return redirect()->route('customer.cart')->with('message', 'تعذر ربط عملية الدفع بالطلب');
+        }
 
         if (empty($settings['secret_key'])) {
             return redirect()->route('customer.cart')->with('message', 'بوابة الدفع غير مهيأة بالكامل');
@@ -1036,7 +1072,7 @@ class CustomerController extends Controller
 
         $paymentResponse->response = json_encode($data);
         $paymentResponse->status = $data->status;
-        $paymentResponse->customer_id = $customer->id;
+        $paymentResponse->customer_id = $paymentCustomer->id;
         $paymentResponse->save();
 
         $orderData = json_decode(json_encode($data));
@@ -1046,7 +1082,13 @@ class CustomerController extends Controller
         $paymentService = new PaymentService();
         $paymentService->customerServiceOrder($paymentRequest, $moyasarPaymentId, $orderData, $paymentDefinition);
 
-        return redirect()->route('customer.dashboard')->with('message', 'تم إستكمال الدفع بنجاح');
+        return redirect()->route($customer ? 'customer.dashboard' : 'customer.cart')
+            ->with('message', 'تم إستكمال الدفع بنجاح. شكراً لطلبك من تيانيل، وسيتم التواصل معك بخصوص الشحن.')
+            ->with('purchaseCompleted', [
+                'value' => (float) $paymentRequest->amount,
+                'currency' => 'SAR',
+                'content_ids' => $this->paymentRequestContentIds($paymentRequest),
+            ]);
     }
 
     public static function generalSettings()
@@ -1233,7 +1275,7 @@ class CustomerController extends Controller
         }
 
         $draftPayment = $this->localPaymentData($amount, 'INITIATED');
-        $paymentRequest = $this->newPaymentRequest($draftPayment, $request, number_format($amount, 2, '.', ''), $carts, $request->discount_id ? decrypt($request->discount_id) : null, 'tamara');
+        $paymentRequest = $this->newPaymentRequest($draftPayment, $request, number_format($amount, 2, '.', ''), $carts, $request->discount_id ? decrypt($request->discount_id) : null, 'tamara', $customer);
         $payload = $this->tamaraCheckoutPayload($paymentRequest, $customer, $address, $carts, $cartTotalPrice, $amount, $discountModel);
         $checkout = $this->tamaraApiRequest($settings, 'POST', '/checkout', $payload);
 
@@ -1433,7 +1475,13 @@ class CustomerController extends Controller
         }
 
         if (ServiceInvoice::where('refrence_id', $orderId)->exists()) {
-            return redirect()->route($customer ? 'customer.dashboard' : 'customer.login')->with('message', 'تم إستكمال الدفع بنجاح');
+            return redirect()->route($customer ? 'customer.dashboard' : 'customer.cart')
+                ->with('message', 'تم إستكمال الدفع بنجاح. شكراً لطلبك من تيانيل، وسيتم التواصل معك بخصوص الشحن.')
+                ->with('purchaseCompleted', [
+                    'value' => (float) $paymentRequest->amount,
+                    'currency' => 'SAR',
+                    'content_ids' => $this->paymentRequestContentIds($paymentRequest),
+                ]);
         }
 
         $settings = $this->tamaraSettings($this->generalSettings());
@@ -1452,7 +1500,13 @@ class CustomerController extends Controller
 
         $this->completeTamaraPayment($paymentRequest, $orderId, $lookup['data']);
 
-        return redirect()->route($customer ? 'customer.dashboard' : 'customer.login')->with('message', 'تم إستكمال الدفع بنجاح');
+        return redirect()->route($customer ? 'customer.dashboard' : 'customer.cart')
+            ->with('message', 'تم إستكمال الدفع بنجاح. شكراً لطلبك من تيانيل، وسيتم التواصل معك بخصوص الشحن.')
+            ->with('purchaseCompleted', [
+                'value' => (float) $paymentRequest->amount,
+                'currency' => 'SAR',
+                'content_ids' => $this->paymentRequestContentIds($paymentRequest),
+            ]);
     }
 
     public function tamaraWebhook(Request $request)
@@ -1858,33 +1912,21 @@ class CustomerController extends Controller
         return redirect()->route('customer.allAddress')->with('message', 'تم إضافة العنوان بنجاح');
     }
 
+    private function guestCheckoutCustomer(Request $request): Customer
+    {
+        $customer = new Customer();
+        $customer->forceFill([
+            'name' => $request->checkout_name ?: 'عميلة تيانيل',
+            'activate' => 1,
+            'newsletter' => 0,
+        ])->save();
+
+        return $customer;
+    }
+
     private function storeCheckoutAddress(Request $request, Customer $customer): CustomerAddress
     {
-        $this->validate($request, [
-            'checkout_name' => 'required|string|max:255',
-            'checkout_phone' => 'required|string|max:30',
-            'checkout_email' => 'required|email|max:255',
-            'checkout_country' => 'required|string|max:255',
-            'checkout_city' => 'required|string|max:255',
-            'checkout_street' => 'required|string|max:255',
-            'checkout_address' => 'required|string|max:1000',
-        ], [
-            'checkout_name.required' => 'اسم مستلم الشحنة مطلوب',
-            'checkout_phone.required' => 'رقم الجوال مطلوب لإتمام الشحن',
-            'checkout_email.required' => 'البريد الإلكتروني مطلوب لإرسال تحديثات الطلب',
-            'checkout_email.email' => 'البريد الإلكتروني غير صحيح',
-            'checkout_city.required' => 'المدينة مطلوبة',
-            'checkout_street.required' => 'الحي مطلوب',
-            'checkout_address.required' => 'العنوان الوطني مطلوب لإتمام عملية التوصيل',
-        ]);
-
-        if (! in_array($request->checkout_country, ['المملكة العربية السعوديه', 'المملكة العربية السعودية'], true)) {
-            throw new \Illuminate\Http\Exceptions\HttpResponseException(
-                redirect()->back()
-                    ->withInput()
-                    ->with('noCartAddress', 'ندعم الشحن داخل المملكة العربية السعودية فقط')
-            );
-        }
+        $this->validateCheckoutAddress($request);
 
         $data = [
             'name' => $request->checkout_name,
@@ -1911,6 +1953,35 @@ class CustomerController extends Controller
         }
 
         return CustomerAddress::create($data);
+    }
+
+    private function validateCheckoutAddress(Request $request): void
+    {
+        $this->validate($request, [
+            'checkout_name' => 'required|string|max:255',
+            'checkout_phone' => 'required|string|max:30',
+            'checkout_email' => 'required|email|max:255',
+            'checkout_country' => 'required|string|max:255',
+            'checkout_city' => 'required|string|max:255',
+            'checkout_street' => 'required|string|max:255',
+            'checkout_address' => 'required|string|max:1000',
+        ], [
+            'checkout_name.required' => 'اسم مستلم الشحنة مطلوب',
+            'checkout_phone.required' => 'رقم الجوال مطلوب لإتمام الشحن',
+            'checkout_email.required' => 'البريد الإلكتروني مطلوب لإرسال تحديثات الطلب',
+            'checkout_email.email' => 'البريد الإلكتروني غير صحيح',
+            'checkout_city.required' => 'المدينة مطلوبة',
+            'checkout_street.required' => 'الحي مطلوب',
+            'checkout_address.required' => 'العنوان الوطني مطلوب لإتمام عملية التوصيل',
+        ]);
+
+        if (! in_array($request->checkout_country, ['المملكة العربية السعوديه', 'المملكة العربية السعودية'], true)) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                redirect()->back()
+                    ->withInput()
+                    ->with('noCartAddress', 'ندعم الشحن داخل المملكة العربية السعودية فقط')
+            );
+        }
     }
 
     /**
@@ -1990,16 +2061,22 @@ class CustomerController extends Controller
         return null;
     }
 
-    public function newPaymentRequest($data, $request, $amount, $carts, $discount_id, $payment)
+    public function newPaymentRequest($data, $request, $amount, $carts, $discount_id, $payment, ?Customer $customer = null)
     {
+        $customer = $customer ?: Auth::guard('customer')->user();
+
+        if (! $customer) {
+            throw new \RuntimeException('Checkout customer is required');
+        }
+
         $paymentRequest = new PaymentRequest();
-        $paymentRequest->customer_id = Auth::guard('customer')->user()->id;
+        $paymentRequest->customer_id = $customer->id;
         $paymentRequest->payment_type = $payment;
         $paymentRequest->request = json_encode($data);
         $paymentRequest->payment_id = $data->id ?? '';
         $paymentRequest->customer_address = $request->address;
         $paymentRequest->amount = $amount;
-        $paymentRequest->cart_items = $this->cartItems();
+        $paymentRequest->cart_items = $carts;
         // dd($carts->pluck('id')->toArray());
         $paymentRequest->cart_ids = json_encode($carts->pluck('id')->toArray());
         $paymentRequest->status = $data->status ?? '';
@@ -2007,5 +2084,21 @@ class CustomerController extends Controller
         $paymentRequest->payment_url = $data->transaction->url ?? '';
         $paymentRequest->save();
         return $paymentRequest;
+    }
+
+    private function paymentRequestContentIds(PaymentRequest $paymentRequest): array
+    {
+        $items = json_decode($paymentRequest->cart_items, true);
+
+        if (is_array($items)) {
+            return collect($items)
+                ->pluck('service_id')
+                ->filter()
+                ->map(fn ($id) => (string) $id)
+                ->values()
+                ->all();
+        }
+
+        return [];
     }
 }

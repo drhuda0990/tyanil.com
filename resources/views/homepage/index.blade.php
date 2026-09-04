@@ -206,6 +206,46 @@
             font-weight: 800;
         }
 
+        .ty-trust-row {
+            position: relative;
+            z-index: 2;
+            margin-top: -28px;
+            margin-bottom: 30px;
+        }
+
+        .ty-trust-row__grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid rgba(75, 33, 63, .10);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .76);
+            box-shadow: 0 24px 58px rgba(75, 33, 63, .10);
+            backdrop-filter: blur(18px);
+        }
+
+        .ty-trust-row__item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 58px;
+            color: var(--ty-plum);
+            font-weight: 900;
+        }
+
+        .ty-trust-row__item i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 8px;
+            background: rgba(217, 137, 163, .16);
+            color: var(--ty-rose);
+        }
+
         .ty-hero__visual {
             position: relative;
             min-height: 488px;
@@ -803,6 +843,20 @@
                 padding: 52px 0;
             }
 
+            .ty-trust-row {
+                margin-top: 18px;
+                margin-bottom: 12px;
+            }
+
+            .ty-trust-row__grid {
+                grid-template-columns: 1fr;
+                padding: 12px 16px;
+            }
+
+            .ty-trust-row__item {
+                min-height: 50px;
+            }
+
             .ty-section__head,
             .ty-cta {
                 display: block;
@@ -995,6 +1049,33 @@
                                 </a>
                             @endforeach
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ty-trust-row">
+            <div class="container">
+                <div class="ty-trust-row__grid">
+                    <div class="ty-trust-row__item">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span class="tr-ar">طلب سريع بدون حساب</span>
+                        <span class="tr-en">Guest checkout</span>
+                    </div>
+                    <div class="ty-trust-row__item">
+                        <i class="fa-solid fa-shield-check"></i>
+                        <span class="tr-ar">دفع آمن ومرن</span>
+                        <span class="tr-en">Secure payment</span>
+                    </div>
+                    <div class="ty-trust-row__item">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        <span class="tr-ar">تواصل واضح للشحن</span>
+                        <span class="tr-en">Shipping follow-up</span>
+                    </div>
+                    <div class="ty-trust-row__item">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span class="tr-ar">استبدال واسترجاع</span>
+                        <span class="tr-en">Returns supported</span>
                     </div>
                 </div>
             </div>

@@ -7,7 +7,33 @@
 @section('og_image', \Illuminate\Support\Str::startsWith($service->image_url, ['http://', 'https://']) ? $service->image_url : url($service->image_url))
 <!--* ********************************* -->
 @section('SCSS')
+    <style>
+        .store-product-trust {
+            display: grid;
+            gap: 10px;
+            margin: 16px 0 18px;
+        }
 
+        .store-product-trust__item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid rgba(75, 33, 63, .12);
+            border-radius: 8px;
+            background: rgba(255, 244, 239, .65);
+            color: #4B213F;
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .store-product-trust__item i {
+            width: 28px;
+            color: #D989A3;
+            text-align: center;
+        }
+    </style>
 @endsection
 <!--* ********************************* -->
 @section('content')
@@ -230,6 +256,20 @@
                                 @endif
                                 {{ $service->formatted_price }} SAR
                             </span>
+                            <div class="store-product-trust" aria-label="مميزات الطلب">
+                                <div class="store-product-trust__item">
+                                    <i class="fa-solid fa-user-check"></i>
+                                    <span>إتمام الطلب كزائرة بدون إنشاء حساب</span>
+                                </div>
+                                <div class="store-product-trust__item">
+                                    <i class="fa-solid fa-truck-fast"></i>
+                                    <span>بعد الدفع يتم التواصل معك بخصوص الشحن</span>
+                                </div>
+                                <div class="store-product-trust__item">
+                                    <i class="fa-solid fa-shield-check"></i>
+                                    <span>دفع آمن وخيارات دفع مرنة</span>
+                                </div>
+                            </div>
                             <br>
                             <button onclick="copyShareText()" type="button" class="btn-one btn-one2"><i
                                     class="fa-light fa-share-nodes"></i>مشاركة
@@ -286,6 +326,14 @@
     @endphp
     <script type="application/ld+json">{!! json_encode($productSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
     <script>
+        window.tyanielTrackTikTok('ViewContent', {
+            content_id: @json((string) $service->id),
+            content_name: @json($service->title),
+            content_type: 'product',
+            value: Number(@json((float) $schemaPrice)),
+            currency: 'SAR',
+        });
+
         function copyShareText() {
             var title = 'مرحباً بك معنا في \n' + @json($gSetting->name) + '\n'; // This safely escapes quotes  
             title += @json($service->title); // This safely escapes quotes

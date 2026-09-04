@@ -78,10 +78,9 @@ Route::get('/cartRemove/{service}/', $customerController . '@cartRemove')->name(
 Route::post('/code_id', $customerController . "@code_id")->name('code_id');
 Route::get('/manualLogin', $customerController . "@manualLogin")->name('manualLogin');
 Route::get('/check',  $customerController . "@check")->name('tap.check');
-Route::middleware('auth.customer')->group(function () use ($customerController) {
-  Route::get('/payment/moyasar/{paymentRequest}', $customerController . '@moyasarForm')->name('moyasar.form');
-  Route::get('/payment/moyasar/callback/{paymentRequest}', $customerController . '@moyasarCallback')->name('moyasar.callback');
-});
+Route::post('/customer/cartSubmit', $customerController . '@cartSubmit')->name('cart.submit')->middleware('throttle:20,1');
+Route::get('/payment/moyasar/{paymentRequest}', $customerController . '@moyasarForm')->name('moyasar.form');
+Route::get('/payment/moyasar/callback/{paymentRequest}', $customerController . '@moyasarCallback')->name('moyasar.callback');
 Route::get('/payment/tamara/callback/{paymentRequest}/{result}', $customerController . '@tamaraCallback')->name('tamara.callback');
 Route::post('/payment/tamara/webhook', $customerController . '@tamaraWebhook')->name('tamara.webhook')->middleware('throttle:60,1');
 Route::post('/logout',  "CustomerController@logout")->name('customer.logout');
@@ -115,7 +114,6 @@ Route::prefix('customer')->middleware('auth.customer')->group(function () {
   Route::get('/cv/{id}/delete', [CvTemplateController::class, 'destroy'])->name('cv.delete');
   Route::put('/cv/{id}/update', [CvTemplateController::class, 'update'])->name('cv.update');
   Route::get('/download/{media}', $customerController . '@download')->name('media.download');
-  Route::post('/cartSubmit', $customerController . '@cartSubmit')->name('cart.submit');
   Route::get('/dashboard', $customerController . "@dashboard")->name('customer.dashboard');
   Route::get('/notifications', $customerController . "@notifications")->name('customer.notifications');
   Route::get('/notifications/{id}/read', $customerController . "@notificationRead")->name('customer.notifications.read');

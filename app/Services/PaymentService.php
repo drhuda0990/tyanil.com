@@ -36,14 +36,22 @@ class PaymentService
     {
         return StoreSettings::get();
     }
-    public function tapCheck($payment_id, $customer)
+    public function tapCheck($payment_id, ?Customer $customer = null)
     {
         $success = $this->handleTapCheck($payment_id, $customer);
         if ($success) {
-            return redirect()->route('customer.dashboard')->with(
-                'message',
-                'تم إستكمال الدفع بنجاح'
-            );
+            $paymentRequest = PaymentRequest::where('payment_id', $payment_id)->latest()->first();
+
+            return redirect()->route($customer ? 'customer.dashboard' : 'customer.cart')
+                ->with(
+                    'message',
+                    'تم إستكمال الدفع بنجاح. شكراً لطلبك من تيانيل، وسيتم التواصل معك بخصوص الشحن.'
+                )
+                ->with('purchaseCompleted', [
+                    'value' => (float) ($paymentRequest->amount ?? 0),
+                    'currency' => 'SAR',
+                    'content_ids' => $paymentRequest ? $this->paymentRequestContentIds($paymentRequest) : [],
+                ]);
         } else {
             return redirect()->route('customer.cart')->with(
                 'message',
@@ -69,7 +77,7 @@ class PaymentService
         }
         return $carts;
     }
-    public function handleTapCheck($tap_id, $customer)
+    public function handleTapCheck($tap_id, ?Customer $customer = null)
     {
 
         $generalSettings = $this->generalSettings();
@@ -78,7 +86,18 @@ class PaymentService
         $key = "Bearer $tapSecretAPIKey";
 
         $tap_id = $tap_id;
-        $paymentRequestModel = PaymentRequest::where([['payment_id', $tap_id], ['customer_id', $customer->id]])->first();
+        $paymentRequestQuery = PaymentRequest::where('payment_id', $tap_id);
+        if ($customer) {
+            $paymentRequestQuery->where('customer_id', $customer->id);
+        }
+        $paymentRequestModel = $paymentRequestQuery->latest()->first();
+        if (!$paymentRequestModel) {
+            return false;
+        }
+        $paymentCustomer = $customer ?: Customer::find($paymentRequestModel->customer_id);
+        if (!$paymentCustomer) {
+            return false;
+        }
         $curl = curl_init();
         // dd($paymentRequest);
         curl_setopt_array($curl, array(
@@ -111,12 +130,16 @@ class PaymentService
         if ($err) {
             return false;
         } else {
+            if (ServiceInvoice::where('refrence_id', $tap_id)->exists()) {
+                return true;
+            }
+
             $paymentRequest = $paymentRequestModel->toArray();
             $newPaymentResponse = collect($paymentRequest)->except(['id', 'created_at', 'updated_at', 'cart_items', 'check_num'])->toArray();
             $newPaymentResponse = PaymentResponse::create($newPaymentResponse);
             $newPaymentResponse->response = json_encode($data);
             $newPaymentResponse->status = $data->status;
-            $newPaymentResponse->customer_id = $customer->id;
+            $newPaymentResponse->customer_id = $paymentCustomer->id;
             $newPaymentResponse->save();
             if ($data->status == 'CAPTURED') {
                 $this->customerServiceOrder($paymentRequestModel, $tap_id, $data, $payment_definition);
@@ -372,7 +395,6 @@ class PaymentService
 
         $shipmentPrice = (float) ($serviceInvoice->shipment_price ?? 0);
         $totalAmount = (float) ($serviceInvoice->paid_amount ?? 0) + $shipmentPrice;
-        $invoiceUrl = route('customer.invoice', ['id' => $serviceInvoice->id]);
 
         $body = '<p>عميلتنا العزيزة ' . e($serviceInvoice->name ?: $customer->name) . '،</p>'
             . '<p>شكراً لطلبك من متجر تيانيل. تم استلام طلبك بنجاح، وسيتم التواصل معك قريباً بخصوص تفاصيل الشحن والتوصيل.</p>'
@@ -380,7 +402,6 @@ class PaymentService
             . ($productItems ? '<p><strong>المنتجات المطلوبة:</strong></p><ul>' . $productItems . '</ul>' : '')
             . '<p><strong>إجمالي الطلب:</strong> ' . e(number_format($totalAmount, 2)) . ' ريال</p>'
             . '<p>يرجى التأكد من جاهزية رقم الجوال المسجل لدينا حتى يتمكن فريق تيانيل أو شركة الشحن من تنسيق التوصيل معك بسهولة.</p>'
-            . '<p><a href="' . e($invoiceUrl) . '">عرض تفاصيل الطلب</a></p>'
             . '<p>تيانيل - أنت تستحقين الأجمل</p>';
 
         General::sendMail('شكراً لطلبك من تيانيل', $body, 'order shipping thank you', $email);
@@ -399,16 +420,32 @@ class PaymentService
 
         $notification_sms = Definition::where('id', '=', $service->purchase_message)->pluck('content')->first();
         $notification_email = Definition::where('id', '=', $service->purchase_email)->pluck('content')->first();
-        if (!(empty($notification_email))) {
+        if (!(empty($notification_email)) && !empty($Email_User)) {
             $body       = $notification_email . $addtion_txt;
             $to         = $Email_User;
             $get_return = $General->sendMail($title, $body, $section, $to, null);
         }
-        if (!(empty($notification_sms))) {
+        if (!(empty($notification_sms)) && !empty($Phone_User)) {
             $body       = $notification_sms;
             $get_return       = $General->sendSMS($title, $body, $section,  $Phone_User);
         }
         return 1;
+    }
+
+    private function paymentRequestContentIds(PaymentRequest $paymentRequest): array
+    {
+        $items = json_decode($paymentRequest->cart_items, true);
+
+        if (is_array($items)) {
+            return collect($items)
+                ->pluck('service_id')
+                ->filter()
+                ->map(fn ($id) => (string) $id)
+                ->values()
+                ->all();
+        }
+
+        return [];
     }
 
     private function decrementServiceQuantity(?Service $service): void
